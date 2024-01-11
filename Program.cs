@@ -1,5 +1,4 @@
-﻿
-using Sudoku;
+﻿using Sudoku;
 
 List<string> tests = 
 [
@@ -18,5 +17,5 @@ List<string> tests =
 ];
 
 Puzzle p = new(tests[3]);
-var solver = new SoleCandidateSolver();
+var solver = new NakedSinglesSolver();
 Solver.Solve(p, solver);

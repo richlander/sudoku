@@ -22,6 +22,22 @@ public class Box(int index)
 
     public int[] CellsForCells { get; } = GetCellsForCells(index).ToArray();
 
+    public IEnumerable<int> GetRow(int index)
+    {
+        int cell = FirstCell + index * 9;
+        yield return cell++;
+        yield return cell++;
+        yield return cell;
+    }
+
+    public IEnumerable<int> GetRowValues(int index, Puzzle puzzle)
+    {
+        foreach(int cell in GetRow(index))
+        {
+            yield return puzzle[index];
+        }
+    }
+
     public static int GetIndex(int row, int column) => (row / 3) * 3 + (column % 3);
 
     public static int GetFirstCellForBox(int index) => (index / 3) * 27 + (index % 3) * 3;
