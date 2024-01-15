@@ -33,48 +33,63 @@ public class HiddenSinglesSolver : ISolver
     {
         Box box = puzzle.GetBox(index);
         // get adjacent neighboring boxes
-        int ahnb1 = box.FirstHorizontalNeighbor;
-        int ahnb2 = box.SecondHorizontalNeighbor;
-        int avnb1 = box.FirstVerticalNeighbor;
-        int avnb2 = box.SecondVerticalNeighbor;
+        Box ahnb1 = puzzle.GetBox(box.FirstHorizontalNeighbor);
+        Box ahnb2 = puzzle.GetBox(box.SecondHorizontalNeighbor);
+        Box avnb1 = puzzle.GetBox(box.FirstVerticalNeighbor);
+        Box avnb2 = puzzle.GetBox(box.SecondVerticalNeighbor);
+
+        NeighborBoxes neighbors = new([ ahnb1, ahnb2 ], [ avnb1, avnb2 ]);
+
+        if (TrySolveRowOneCellUnsolved(puzzle, box, neighbors, out solution))
+        {
+            return true;
+        }
+
+        if (TrySolveColumnOneCellUnsolved(puzzle, box, neighbors, out solution))
+        {
+            Console.WriteLine("TrySolveColumnOneCellUnsolved");
+            return true;
+        }
 
         solution = default;
         return false;
     }
 
-    private bool TrySolveRowOneCellUnsolved(Puzzle puzzle, Box box, NeighborRows neighbors, [NotNullWhen(true)] out Solution? solution)
+    private bool TrySolveRowOneCellUnsolved(Puzzle puzzle, Box box, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
     {
         // Try for three rows
         for (int i = 0; i < 3; i++)
         {
-            // get row values
+            // get (3) row values
             int[] row = box.GetRowValues(i, puzzle).ToArray();
 
             // test for one cell unsolved in row
-            int unsolvedCount = 0;
-            int unsolvedIndex = 0;
-            foreach(int cell in row)
-            {
-                if (cell is 0)
-                {
-                    unsolvedCount++;
-                    unsolvedIndex++;
-                }
-                else if (unsolvedCount is 0)
-                {
-                    unsolvedIndex++;
-                }
+            bool oneUnsolved = row.Count(num => num is 0) is 1;
 
-            }
-
-            if (unsolvedCount is 1)
+            if (oneUnsolved)
             {
+                // find which cell is unsolved within the row
+                int unsolvedIndex = Array.IndexOf(row, 0);
+                // find within the box
                 int boxCellIndex = (i * 3) + unsolvedIndex;
+                // find within the puzzle
                 int cellIndex = box.CellsForCells[boxCellIndex];
+                // find candidates for that cell
                 List<int> candidates = puzzle.Candidates[cellIndex];
 
-                if (TrySolveRowOneCellUnsolvedForRow(candidates, row, neighbors, out solution))
+                // find neighbors
+                int two = (i + 1) % 3;
+                int three = (i + 2) % 3;
+
+                NeighborRows neighborRows = new(neighbors.Horizontal[0].GetRowValues(two, puzzle),
+                                                neighbors.Horizontal[0].GetRowValues(three,puzzle),
+                                                neighbors.Horizontal[1].GetRowValues(two,puzzle),
+                                                neighbors.Horizontal[1].GetRowValues(three,puzzle));
+
+                if (TrySolveRowOneCellUnsolvedForRow(candidates, row, neighborRows, out int value))
                 {
+                    puzzle.Candidates[cellIndex] = [];
+                    solution = Box.GetSolutionForBox(box.Index, boxCellIndex, value, nameof(HiddenSinglesSolver));
                     return true;
                 }
             }
@@ -83,6 +98,50 @@ public class HiddenSinglesSolver : ISolver
         solution = default;
         return false;
     }
+
+    private bool TrySolveColumnOneCellUnsolved(Puzzle puzzle, Box box, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
+    {
+        // Try for three columns
+        for (int i = 0; i < 3; i++)
+        {
+            // get (3) row values
+            int[] column = box.GetColumnValues(i, puzzle).ToArray();
+
+            // test for one cell unsolved in row
+            bool oneUnsolved = column.Count(num => num is 0) is 1;
+
+            if (oneUnsolved)
+            {
+                // find which cell is unsolved within the row
+                int unsolvedIndex = Array.IndexOf(column, 0);
+                // find within the box
+                int boxCellIndex = (i * 3) + unsolvedIndex;
+                // find within the puzzle
+                int cellIndex = box.CellsForCells[boxCellIndex];
+                // find candidates for that cell
+                List<int> candidates = puzzle.Candidates[cellIndex];
+
+                // find neighbors
+                int two = (i + 1) % 3;
+                int three = (i + 2) % 3;
+
+                NeighborRows neighborRows = new(neighbors.Vertical[0].GetColumnValues(two, puzzle),
+                                                neighbors.Vertical[0].GetColumnValues(three,puzzle),
+                                                neighbors.Vertical[1].GetColumnValues(two,puzzle),
+                                                neighbors.Vertical[1].GetColumnValues(three,puzzle));
+
+                if (TrySolveRowOneCellUnsolvedForRow(candidates, column, neighborRows, out int value))
+                {
+                    puzzle.Candidates[cellIndex] = [];
+                    solution = Box.GetSolutionForBox(box.Index, boxCellIndex, value, nameof(HiddenSinglesSolver));
+                    return true;
+                }
+            }
+        }
+
+        solution = default;
+        return false;
+    }    
 
     // One cell unsolved in row
     private static bool TrySolveRowOneCellUnsolvedForRow(IEnumerable<int> candidates, IEnumerable<int> row, NeighborRows neighbors, out int value)
@@ -105,6 +164,37 @@ public class HiddenSinglesSolver : ISolver
 
         return false;
     }
+
+    private static bool TrySolveCell(Puzzle puzzle, Box box, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
+    {
+        // Candidate unique in column
+
+        
+        solution = default;
+        return false;
+    }
+
+    private static bool TrySolveCandidateUniqueInLine(Puzzle puzzle, int index, IEnumerable<int> cells, out int value)
+    {
+        List<int> candidates = puzzle.Candidates[index];
+
+        foreach (int cell in cells)
+        {
+            List<int> cellCandidates = puzzle.Candidates[cell];
+            candidates.Except(cellCandidates);
+
+            if (candidates.Count is 1)
+            {
+                value = candidates.Single();
+            }
+        }
+
+        value = 0;
+        return false;
+    }
+
 }
 
 record NeighborRows(IEnumerable<int> Box1Row2, IEnumerable<int> Box1Row3, IEnumerable<int> Box2Row2, IEnumerable<int> Box2Row3);
+
+record NeighborBoxes(Box[] Horizontal, Box[] Vertical);

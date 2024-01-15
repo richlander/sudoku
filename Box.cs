@@ -2,6 +2,7 @@ namespace Sudoku;
 
 public class Box(int index)
 {
+    public int Index { get; } = index;
     public int FirstCell { get; } = GetFirstCellForBox(index);
 
     public int FirstColumn { get; } = GetColumnForBoxCell(index, 0);
@@ -30,11 +31,29 @@ public class Box(int index)
         yield return cell;
     }
 
+    // Get the three cells in row
     public IEnumerable<int> GetRowValues(int index, Puzzle puzzle)
     {
         foreach(int cell in GetRow(index))
         {
-            yield return puzzle[index];
+            yield return puzzle[cell];
+        }
+    }
+
+    public IEnumerable<int> GetColumn(int index)
+    {
+        int cell = FirstCell + index;
+        yield return cell;
+        yield return cell + 9;
+        yield return cell + 18;
+    }
+
+    // Get the three cells in column
+    public IEnumerable<int> GetColumnValues(int index, Puzzle puzzle)
+    {
+        foreach(int cell in GetColumn(index))
+        {
+            yield return puzzle[cell];
         }
     }
 
