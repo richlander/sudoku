@@ -38,6 +38,14 @@ public class Puzzle
 
     public IEnumerable<int> GetCellsForColumn(int index) => GetColumnCells(index);
 
+    public IEnumerable<int> GetCellIndicesForColumn(int index)
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            yield return (i * 9) + index;
+        }
+    }
+
     public IEnumerable<int> GetCellsForBox(int index) => GetBoxCells(index);
 
     public Box GetBox(int index) => _boxes[index];
@@ -135,11 +143,15 @@ public class Puzzle
         return true;
     }
 
+    public static int GetCellForRow(int cell) => cell / 9;
+
+    public static int GetCellForColumn(int cell) => cell / 9;
+
     private IEnumerable<int> GetColumnCells(int index)
     {
-        for (int i = 0; i < 9; i++)
+        foreach(int cell in GetCellIndicesForColumn(index))
         {
-            yield return Cells[(i * 9) + index];
+            yield return Cells[cell];
         }
     }
 

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -49,6 +50,14 @@ public class HiddenSinglesSolver : ISolver
         {
             Console.WriteLine("TrySolveColumnOneCellUnsolved");
             return true;
+        }
+
+        for (int i = 0; i < 9; i++)
+        {
+            if (TrySolveCell(puzzle, box, i, out solution ))
+            {
+                return true;
+            }
         }
 
         solution = default;
@@ -165,31 +174,62 @@ public class HiddenSinglesSolver : ISolver
         return false;
     }
 
-    private static bool TrySolveCell(Puzzle puzzle, Box box, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
+    private static bool TrySolveCell(Puzzle puzzle, Box box, int cell, [NotNullWhen(true)] out Solution? solution)
     {
-        // Candidate unique in column
+        // Get cell in puzzle
+        int column = box.ColumnsForCells[cell];
+        int cellInPuzzle = box.CellsForCells[cell];
+        int cellInColumn = Puzzle.GetCellForColumn(cellInPuzzle);
+        IEnumerable<int> columnCells = puzzle.GetCellIndicesForColumn(column);
 
+        if (box.Index is 8 && cell > 6)
+        {
+
+        }
+
+        // Candidate unique in column
+        if (TrySolveCandidateUniqueInLine(puzzle, cellInPuzzle, cellInColumn, columnCells, out int value))
+        {
+            solution = Box.GetSolutionForBox(box.Index, cell, value, nameof(HiddenSinglesSolver));
+            return true;
+        }
         
         solution = default;
         return false;
     }
 
-    private static bool TrySolveCandidateUniqueInLine(Puzzle puzzle, int index, IEnumerable<int> cells, out int value)
+    private static bool TrySolveCandidateUniqueInLine(Puzzle puzzle, int index, int indexInLine, IEnumerable<int> cells, out int value)
     {
         List<int> candidates = puzzle.Candidates[index];
+        IEnumerable<int> candidates2 = candidates;
+        int count = 0;
+        value = 0;
 
         foreach (int cell in cells)
         {
-            List<int> cellCandidates = puzzle.Candidates[cell];
-            candidates.Except(cellCandidates);
-
-            if (candidates.Count is 1)
+            if (indexInLine == count)
             {
-                value = candidates.Single();
+                count++;
+                continue;
             }
+
+            List<int> cellCandidates = puzzle.Candidates[cell];
+            candidates2 = candidates2.Except(cellCandidates);
+
+            if (candidates2.Count() is 0)
+            {
+                return false;
+            }
+
+            count++;
         }
 
-        value = 0;
+        if (candidates2.Count() is 1)
+        {
+            value = candidates2.Single();
+            return true;
+        }
+
         return false;
     }
 
