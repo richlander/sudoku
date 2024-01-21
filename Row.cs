@@ -2,5 +2,5 @@ namespace Sudoku;
 
 public static class Row
 {
-    // public static int CellForRowCell (int boxIndex, int index) => 
+    public static int GetRowForCell(int index) => index / 9;
 }
