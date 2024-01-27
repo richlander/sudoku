@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Net.Http.Headers;
 
 namespace Sudoku;
 
@@ -25,95 +26,62 @@ namespace Sudoku;
 
 public class NakedSinglesSolver : ISolver
 {
-    public bool TrySolve(Puzzle puzzle, [NotNullWhen(true)] out Solution? solution)
-    {
-        // iterate over boxes
-        for (int i = 0; i < 9; i++)
-        {
-            if (TrySolveBox(i, puzzle, out solution))
-            {
-                return true;
-            }
-        }
-        
-        solution = default;
-        return false;
-    }
-
-    private bool TrySolveBox(int index, Puzzle puzzle, [NotNullWhen(true)] out Solution? solution)
-    {
-        Box box = puzzle.GetBox(index);
-        // iterate over cells
-        for (int i = 0; i < 9; i++)
-        {
-            if (puzzle.IsCellSolved(box.CellsForCells[i]))
-            {
-                continue;
-            }
-
-            var puzzleCell = Box.GetIndexForBoxCell(index, i);
-            var candidates = puzzle.Candidates[puzzleCell];
-
-            if (RemoveCandidatesForCell(puzzle, index, i, candidates))
-            {
-                var candidate = puzzle.Candidates[puzzleCell].Single();
-                solution = Box.GetSolutionForBox(index, i, candidate, nameof(NakedSinglesSolver));
-                return true;
-            }
-        }
-
-        solution = default;
-        return false;
-    }
-
 /*
-    Box is the best (and only required) grouping for this solver.
-    With a box, the box, rows and columns can be used to remove candidates.
+    The box, rows and columns can be used to remove candidates.
 
     Info we need for a given cell (within a box):
 
-    - Is this cell unsolved?
-    - Which are the 6 cells in the same row in the neighbor horizontal boxes?
-    - Which are the 6 cells in the same column in the neighbor vertical boxes
-    - Given a horizontal or vertical "lool", union the other box and appropriate
-      6 group cells to remove candidates for celll.
+    - The 6 cells in the same row in the neighbor horizontal boxes?
+    - The 6 cells in the same column in the neighbor vertical boxes
+    - Given a horizontal or vertical line, union the other box and appropriate
+      6 group cells to remove candidates for cell.
 */
-
-    // Assumptions
-    // cell is not 0
-    // candidate list is > 1
-    private bool RemoveCandidatesForCell(Puzzle puzzle, int box, int cell, List<int> candidates)
+    public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
-        // Find groupings
-        var row = puzzle.GetCellsForNeighboringRow(box, cell);
-        var column = puzzle.GetCellsForNeighboringColumn(box, cell);
+        solution = default;
+        int index = cell.Index;
+        int box = cell.Box;
+        List<int> candidates = puzzle.Candidates[index];
+
+        var row = puzzle.GetCellsForNeighboringRow(box, cell.Row);
+        var column = puzzle.GetCellsForNeighboringColumn(box, cell.Column);
         var boxcells = puzzle.GetCellsForBox(box);
         List<IEnumerable<int>> groups = [row, column, boxcells];
-        
+        int oneCandidateLeft = candidates.Count - 1;
+        HashSet<int> matches = [];
+
         foreach(var group in groups)
         {
-            if (RemoveCandidates(candidates, group))
+            FindCandidatesToRemove(candidates, group, matches);
+
+            // Solution found
+            if (matches.Count == oneCandidateLeft)
             {
-                if (candidates.Count is 1)
-                {
-                    return true;
-                }
+                int value = candidates.Except(matches).Single();
+                solution = new(cell, value, matches, nameof(NakedSinglesSolver));
+                return true;
             }
+        }
+
+        // Candidates can be removed
+        if (matches.Count > 0)
+        {
+            solution = new(cell, -1, matches, nameof(NakedSinglesSolver));
+            return true;
         }
 
         return false;
     }
 
-    // Removes candidates that are cancelled out by their existence in neighboring areas
-    private bool RemoveCandidates(List<int> candidates, IEnumerable<int> values)
+    // Identify candidates that are cancelled out by their existence in neighboring areas
+    private static void FindCandidatesToRemove(List<int> candidates, IEnumerable<int> values, HashSet<int> matches)
     {
-        bool removed = false;
-
         foreach (int value in values)
         {
-            removed |= candidates.Remove(value);
+            if (candidates.Contains(value))
+            {
+                matches.Add(value);
+            }
         }
-
-        return removed;
     }
 }

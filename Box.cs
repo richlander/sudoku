@@ -95,11 +95,11 @@ public class Box(int index)
         }
     }
 
-    public static Solution GetSolutionForBox(int box, int cell, int value, string solver)
-    {
-        var puzzleCell = GetIndexForBoxCell(box, cell);
-        var row = Cell.GetRowForCell(puzzleCell);
-        var column = Cell.GetColumnForCell(puzzleCell);
-        return new Solution(row, column, value, solver);
-    }
+    // public static Solution GetSolutionForBox(int box, int cell, int value, string solver)
+    // {
+    //     var puzzleCell = GetIndexForBoxCell(box, cell);
+    //     var row = CellFoo.GetRowForCell(puzzleCell);
+    //     var column = CellFoo.GetColumnForCell(puzzleCell);
+    //     return new Solution(row, column, value, [],  solver);
+    // }
 }

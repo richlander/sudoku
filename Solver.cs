@@ -9,28 +9,39 @@ public static class Solver
 
     public static void Solve(Puzzle puzzle, List<ISolver> solvers)
     {
-        int steps = 0;
+        int solutions = 0;
         bool solved = true;
 
         while (solved)
         {
             solved = false;
-            int startIndex = 0;
-            
+
             foreach(ISolver solver in solvers)
             {
-
-                while (TrySolve(puzzle, solver, startIndex, out int nextIndex, out Solution? solution))
+                int startIndex = 0;
+                while (TrySolve(puzzle, solver, startIndex, out int lastIndex, out Solution? solution))
                 {
-                    Console.WriteLine($"{solution.Row},{solution.Column}: {solution.Value}; {solution.Solver}");
+                    Cell cell = solution.Cell;
+                    if (solution.Value > 0)
+                    {
+                        solutions++;
+                        Console.WriteLine($"{cell.Row},{cell.Column}: {solution.Value}; {solution.Solver}");
+                    }
+
                     puzzle.Update(solution);
-                    steps++;
-                    solved |= true;
+                    solved = true;
 
                     if (puzzle.IsSolved)
                     {
                         Console.WriteLine($"Puzzle is solved!");
                         return;    
+                    }
+
+                    startIndex = lastIndex;
+
+                    if (lastIndex >= 80)
+                    {
+                        break;
                     }
                 }
 
@@ -42,34 +53,39 @@ public static class Solver
             }
         }
 
-        Console.WriteLine($"Final puzzle after {steps} steps");
+        Console.WriteLine($"Final puzzle with {solutions} solutions applied");
         Console.WriteLine(puzzle.ToString());
     }
 
-    public static bool TrySolve(Puzzle puzzle, ISolver solver, int startIndex, out int nextIndex, [NotNullWhen(true)] out Solution? solution)
+    public static bool TrySolve(Puzzle puzzle, ISolver solver, int startIndex, out int lastIndex, [NotNullWhen(true)] out Solution? solution)
     {
-        nextIndex = 0;
-        solution = default;
-
-        for (int i = startIndex; i < 81; i++)
+        lastIndex = 80;
+        for (int i = startIndex; i <= lastIndex; i++)
         {
             if (TrySolveCell(puzzle, solver, i, out solution))
             {
-                nextIndex = i < 80 ? i + 1 : 0;
+                lastIndex = i;
                 return true;
             }
         }
 
+        solution = default;
         return false;
     }
 
     public static bool TrySolveCell(Puzzle puzzle, ISolver solver, int index, [NotNullWhen(true)] out Solution? solution)
     {
         solution = default;
-        int box = Cell.GetBoxForCell(index);
-        int row = Cell.GetRowForCell(index);
-        int column = Cell.GetColumnForCell(index);
-        CellLocation location = new(index, row, column, box);
+
+        if (puzzle.IsCellSolved(index))
+        {
+            return false;
+        }
+
+        int box = Puzzle.GetBoxForCell(index);
+        int row = CellFoo.GetRowForCell(index);
+        int column = CellFoo.GetColumnForCell(index);
+        Cell location = new(index, row, column, box);
 
         return solver.TrySolve(puzzle, location, out solution);
     }

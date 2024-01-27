@@ -6,12 +6,13 @@ using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 
 namespace Sudoku;
-public class Puzzle
+public partial class Puzzle
 {
     private readonly int[] _solvedForRow = new int[9];
     private readonly int[] _solvedForColumn = new int[9];
     private readonly int[] _solvedForBox = new int[9];
     private readonly Box[] _boxes = new Box[9];
+    private readonly List<int> _empty = [];
     
     public Puzzle(string puzzle)
     {
@@ -50,13 +51,13 @@ public class Puzzle
 
     public Box GetBox(int index) => _boxes[index];
 
-    public IEnumerable<int> GetCellsForNeighboringRow(int box, int cell)
+    public IEnumerable<int> GetCellsForNeighboringRow(int box, int row)
     {
         Box box0 = _boxes[box];
         Box box1 = _boxes[box0.FirstHorizontalNeighbor];
         Box box2 = _boxes[box0.SecondHorizontalNeighbor];
 
-        int offset = cell / 3 * 3;
+        int offset = (row % 3) * 3;
 
         for (int i = 0; i < 3; i++)
         {
@@ -69,13 +70,14 @@ public class Puzzle
         }
     }
 
-    public IEnumerable<int> GetCellsForNeighboringColumn(int box, int cell)
+    public IEnumerable<int> GetCellsForNeighboringColumn(int box, int column)
     {
         Box box0 = _boxes[box];
         Box box1 = _boxes[box0.FirstVerticalNeighbor];
         Box box2 = _boxes[box0.SecondVerticalNeighbor];
 
-        int offset = cell % 3;
+        // Start of column
+        int offset = column % 3;
 
         for (int i = 0; i < 3; i++)
         {
@@ -100,52 +102,53 @@ public class Puzzle
 
     public bool IsCellSolved(int index) => Cells[index] is not 0;
 
-    public IEnumerable<Location> FindDuplicatesCells()
+    public IEnumerable<Cell> FindDuplicatesCells()
     {
         for (int i = 0; i < 9; i++)
         {
-            foreach(var duplicate in FindDuplicates(GetCellsForRow(i), i))
+            foreach(var (value, index) in FindDuplicates(GetCellsForRow(i)))
             {
-                yield return duplicate;
+                yield return GetCellForRowIndex(i, index, value);
             }
 
-            foreach(var duplicate in FindDuplicates(GetColumnCells(i), i))
+            foreach(var (value, index) in FindDuplicates(GetColumnCells(i)))
             {
-                yield return duplicate;
+                yield return GetCellForColumnIndex(i, index, value);;
             }
 
-            foreach(var duplicate in FindDuplicates(GetBoxCells(i), i))
+            foreach(var (value, index) in FindDuplicates(GetBoxCells(i)))
             {
-                yield return duplicate;
+                yield return GetCellForBoxIndex(i, index, value);
             }
         }
     }
 
-    public bool Update(Solution solution)
+    public void Update(Solution solution)
     {
-        int row = solution.Row;
-        int column = solution.Column;
-        int value = solution.Value;
-        var index = row * 9 + column;
-
+        int index = solution.Cell.Index;
         if (Cells[index] != 0 || SolvedCells is 81)
         {
             throw new Exception("Something went wrong! Oops.");    
         }
 
-        Cells[index] = value;
+        if (solution.Value is -1)
+        {
+            List<int> candidates = Candidates[index];
+            foreach (int value in solution.Removed)
+            {
+                candidates.Remove(value);
+            }
+
+            return;
+        }
+
+        Cells[index] = solution.Value;
         SolvedCells++;
-        _solvedForRow[row]++;
-        _solvedForColumn[column]++;
-        int box = Sudoku.Box.GetIndex(row, column);
-        _solvedForBox[box]++;
-
-        return true;
+        _solvedForRow[solution.Cell.Row]++;
+        _solvedForColumn[solution.Cell.Column]++;
+        _solvedForBox[solution.Cell.Box]++;
+        Candidates[index] = _empty;
     }
-
-    public static int GetCellForRow(int cell) => cell / 9;
-
-    public static int GetCellForColumn(int cell) => cell / 9;
 
     private IEnumerable<int> GetColumnCells(int index)
     {
@@ -205,26 +208,19 @@ public class Puzzle
         return buffer.ToString();
     }
 
-    private static IEnumerable<Location> FindDuplicates(IEnumerable<int> values, int index)
+    private static IEnumerable<(int Index, int Value)> FindDuplicates(IEnumerable<int> values)
     {
-        bool[] exists = new bool[10];
+        HashSet<int> ints = [];
         int count = 0;
 
         foreach (var value in values)
         {
+            if (!ints.Add(value))
+            {
+                yield return (count, value);
+            }
+
             count++;
-
-            if (value is 0)
-            {
-                continue;
-            }
-            else if (exists[value])
-            {
-                // TODO: This value is wrong
-                yield return new(index, count, value);
-            }
-
-            exists[value] = true;
         }
     }
 

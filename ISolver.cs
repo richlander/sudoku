@@ -5,7 +5,5 @@ namespace Sudoku;
     
 public interface ISolver
 {
-    bool TrySolve(Puzzle puzzle, CellLocation location, [NotNullWhen(true)] out Solution? solution);
+    bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution);
 }
-
-public record struct CellLocation(int Index, int Row, int Column, int Box);
