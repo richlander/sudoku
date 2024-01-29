@@ -17,7 +17,6 @@ List<string> tests =
 ];
 
 Puzzle p = new(tests[5]);
-// new NakedSinglesSolver()
-List<ISolver> solvers = [ new HiddenSinglesSolver()];
+List<ISolver> solvers = [ new NakedSinglesSolver(), new HiddenSinglesSolver() ];
 
 Solver.Solve(p, solvers);

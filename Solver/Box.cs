@@ -76,6 +76,8 @@ public class Box(Puzzle puzzle, int index)
 
     public static int GetPuzzleIndexForBoxCell2(int box, int cell) => (box / 3 * 27) + (box % 3 * 3) + (cell / 3 * 9) + cell % 3;
 
+    public static int GetBoxForCell(int cell) => cell / 27 * 3 + cell % 9 / 3;
+
     public static int GetNextHorizontalBox(int index, int next) => (index / 3) * 3 + (index + next) % 3;
 
     public static int GetNextVerticalBox(int index, int next) => (index + next) % 9;
