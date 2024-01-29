@@ -36,9 +36,10 @@ public class NakedSinglesSolver : ISolver
     - Given a horizontal or vertical line, union the other box and appropriate
       6 group cells to remove candidates for cell.
 */
-    public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
+    public bool TrySolve(Puzzle puzzle, BoxCell boxCell, [NotNullWhen(true)] out Solution? solution)
     {
         solution = default;
+        Cell cell = boxCell.Cell;
         int index = cell.Index;
         int box = cell.Box;
         List<int> candidates = puzzle.Candidates[index];

@@ -19,9 +19,9 @@ public partial class Puzzle
 
     public static Cell GetCellForBoxIndex(int box, int index, int value)
     {
-        int puzzleIndex = Box.GetIndexForBoxCell(box, index);
-        int row = Box.GetRowForBoxCell(box, index);
-        int column = Box.GetColumnForBoxCell(box, index);
+        int puzzleIndex = Box.GetPuzzleIndexForBoxCell(box, index);
+        int row = Box.GetPuzzleRowForBoxCell(box, index);
+        int column = Box.GetPuzzleColumnForBoxCell(box, index);
         Cell cell = new(puzzleIndex, column, index, box);
         return cell;
     }

@@ -1,11 +1,14 @@
+using System.Diagnostics.Contracts;
+
 namespace Sudoku;
 
-public class Box(int index)
+public class Box(Puzzle puzzle, int index)
 {
+    public Puzzle Puzzle { get; } = puzzle;
     public int Index { get; } = index;
     public int FirstCell { get; } = GetFirstCellForBox(index);
 
-    public int FirstColumn { get; } = GetColumnForBoxCell(index, 0);
+    public int FirstColumn { get; } = GetPuzzleColumnForBoxCell(index, 0);
 
     public int FirstRow { get; } = (index / 3) % 3;
 
@@ -23,6 +26,8 @@ public class Box(int index)
 
     public int[] CellsForCells { get; } = GetCellsForCells(index).ToArray();
 
+    // public BoxCell[] BoxCells { get; } = GetBoxCells(puzzle, index).ToArray();
+
     public IEnumerable<int> GetRow(int index)
     {
         int cell = FirstCell + index * 9;
@@ -32,11 +37,11 @@ public class Box(int index)
     }
 
     // Get the three cells in row
-    public IEnumerable<int> GetRowValues(int index, Puzzle puzzle)
+    public IEnumerable<int> GetRowValues(int index)
     {
         foreach(int cell in GetRow(index))
         {
-            yield return puzzle[cell];
+            yield return Puzzle[cell];
         }
     }
 
@@ -49,23 +54,27 @@ public class Box(int index)
     }
 
     // Get the three cells in column
-    public IEnumerable<int> GetColumnValues(int index, Puzzle puzzle)
+    public IEnumerable<int> GetColumnValues(int index)
     {
         foreach(int cell in GetColumn(index))
         {
-            yield return puzzle[cell];
+            yield return Puzzle[cell];
         }
     }
 
-    public static int GetIndex(int row, int column) => (row / 3) * 3 + (column % 3);
+    public static int GetRowForCell(int index) => index / 3;
+    public static int GetColumnForCell(int index) => index % 3;
+    public static int GetBoxIndexForRowColumn(int row, int column) => (row / 3) * 3 + (column % 3);
 
     public static int GetFirstCellForBox(int index) => (index / 3) * 27 + (index % 3) * 3;
 
-    public static int GetColumnForBoxCell(int box, int cell) => ((box % 3) * 3) + (cell % 3);
+    public static int GetPuzzleColumnForBoxCell(int box, int cell) => ((box % 3) * 3) + (cell % 3);
 
-    public static int GetRowForBoxCell(int box, int cell) => (box / 3) * 3 + (cell / 3);
+    public static int GetPuzzleRowForBoxCell(int box, int cell) => (box / 3) * 3 + (cell / 3);
 
-    public static int GetIndexForBoxCell(int box, int cell) => GetColumnForBoxCell(box, cell) + (GetRowForBoxCell(box, cell) * 9);
+    public static int GetPuzzleIndexForBoxCell(int box, int cell) => GetPuzzleColumnForBoxCell(box, cell) + (GetPuzzleRowForBoxCell(box, cell) * 9);
+
+    public static int GetPuzzleIndexForBoxCell2(int box, int cell) => (box / 3 * 27) + (box % 3 * 3) + (cell / 3 * 9) + cell % 3;
 
     public static int GetNextHorizontalBox(int index, int next) => (index / 3) * 3 + (index + next) % 3;
 
@@ -75,7 +84,7 @@ public class Box(int index)
     {
         for (int i = 0; i < 9; i++)
         {
-            yield return GetRowForBoxCell(index, i);
+            yield return GetPuzzleRowForBoxCell(index, i);
         }
     }
 
@@ -83,7 +92,7 @@ public class Box(int index)
     {
         for (int i = 0; i < 9; i++)
         {
-            yield return GetColumnForBoxCell(index,i);
+            yield return GetPuzzleColumnForBoxCell(index,i);
         }
     }
 
@@ -91,7 +100,7 @@ public class Box(int index)
     {
         for (int i = 0; i < 9; i++)
         {
-            yield return GetIndexForBoxCell(box, i);
+            yield return GetPuzzleIndexForBoxCell(box, i);
         }
     }
 

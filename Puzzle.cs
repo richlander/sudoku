@@ -2,6 +2,7 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 
@@ -12,17 +13,20 @@ public partial class Puzzle
     private readonly int[] _solvedForColumn = new int[9];
     private readonly int[] _solvedForBox = new int[9];
     private readonly Box[] _boxes = new Box[9];
+    private readonly BoxCell[] _boxCells = new BoxCell[81];
     private readonly List<int> _empty = [];
     
     public Puzzle(string puzzle)
     {
         InitializePuzzle(puzzle);
-        InitializeBoxes();
+        InitializeCellInfo();
         InitializeCandidates();
         CountCells();
     }
 
     public List<int> Cells = new(81);
+
+    public BoxCell BoxCells(int index) => _boxCells[index];
     public Dictionary<int, List<int>> Candidates { get; } = new(81);
 
     public int this[int index] => Cells[index];
@@ -171,6 +175,16 @@ public partial class Puzzle
         }
     }
 
+    public static BoxCell GetBoxCell(Box box, int boxIndex)
+    {
+        int puzzleIndex = Box.GetPuzzleIndexForBoxCell2(box.Index, boxIndex);
+        int row = CellFoo.GetRowForCell(puzzleIndex);
+        int column = CellFoo.GetColumnForCell(puzzleIndex);
+        Cell cell = new(puzzleIndex, row, column, box.Index);
+        BoxCell boxCell = new(cell, box, boxIndex, Box.GetRowForCell(boxIndex), Box.GetColumnForCell(boxIndex));
+        return boxCell;
+    }
+
     private void CountCells()
     {
         for (int i = 0; i < 9; i++)
@@ -238,11 +252,18 @@ public partial class Puzzle
         }
     }
 
-    private void InitializeBoxes()
+    private void InitializeCellInfo()
     {
         for (int i = 0; i < 9; i++)
         {
-            _boxes[i] = new Box(i);
+            Box box = new Box(this, i);
+            _boxes[i] = box;
+
+            for (int j = 0; j < 9; j++)
+            {
+                BoxCell boxCell = GetBoxCell(box, j);
+                _boxCells[boxCell.Cell.Index] = boxCell;
+            }
         }
     }
 
@@ -252,11 +273,16 @@ public partial class Puzzle
         {
             if (Cells[i] is not 0)
             {
-                Candidates[i] = [];
+                Candidates[i] = _empty;
                 continue;
             }
 
-            Candidates[i] = Enumerable.Range(1, 9).ToList();
+            BoxCell boxCell = _boxCells[i];
+            Cell cell = boxCell.Cell;
+            var boxCells = GetCellsForBox(boxCell.Box.Index);
+            var rowCells = GetCellsForRow(cell.Row);
+            var columnCells = GetCellsForColumn(cell.Column);
+            Candidates[i] = Enumerable.Range(1, 9).Except(boxCells).Except(rowCells).Except(columnCells).ToList();
         } 
     }
 }

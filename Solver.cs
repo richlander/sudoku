@@ -37,7 +37,7 @@ public static class Solver
                         return;    
                     }
 
-                    startIndex = lastIndex;
+                    startIndex = lastIndex + 1;
 
                     if (lastIndex >= 80)
                     {
@@ -82,11 +82,8 @@ public static class Solver
             return false;
         }
 
-        int box = Puzzle.GetBoxForCell(index);
-        int row = CellFoo.GetRowForCell(index);
-        int column = CellFoo.GetColumnForCell(index);
-        Cell location = new(index, row, column, box);
+        BoxCell boxCell = puzzle.BoxCells(index);
 
-        return solver.TrySolve(puzzle, location, out solution);
+        return solver.TrySolve(puzzle, boxCell, out solution);
     }
 }
