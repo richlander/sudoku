@@ -162,6 +162,22 @@ public partial class Puzzle
         }
     }
 
+    public IEnumerable<int> GetValues(IEnumerable<int> cells)
+    {
+        foreach(int cell in cells)
+        {
+            yield return this[cell];
+        }
+    }
+
+    public IEnumerable<List<int>> GetCandidates(IEnumerable<int> cells)
+    {
+        foreach(int cell in cells)
+        {
+            yield return Candidates[cell];
+        }
+    }
+
     private IEnumerable<int> GetBoxCells(int index)
     {
         int offset = _boxes[index].FirstCell;
@@ -256,7 +272,7 @@ public partial class Puzzle
     {
         for (int i = 0; i < 9; i++)
         {
-            Box box = new Box(this, i);
+            Box box = new(i);
             _boxes[i] = box;
 
             for (int j = 0; j < 9; j++)

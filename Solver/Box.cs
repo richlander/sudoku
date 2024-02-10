@@ -2,9 +2,8 @@ using System.Diagnostics.Contracts;
 
 namespace Sudoku;
 
-public class Box(Puzzle puzzle, int index)
+public class Box(int index)
 {
-    public Puzzle Puzzle { get; } = puzzle;
     public int Index { get; } = index;
     public int FirstCell { get; } = GetFirstCellForBox(index);
 
@@ -36,30 +35,12 @@ public class Box(Puzzle puzzle, int index)
         yield return cell;
     }
 
-    // Get the three cells in row
-    public IEnumerable<int> GetRowValues(int index)
-    {
-        foreach(int cell in GetRow(index))
-        {
-            yield return Puzzle[cell];
-        }
-    }
-
     public IEnumerable<int> GetColumn(int index)
     {
         int cell = FirstCell + index;
         yield return cell;
         yield return cell + 9;
         yield return cell + 18;
-    }
-
-    // Get the three cells in column
-    public IEnumerable<int> GetColumnValues(int index)
-    {
-        foreach(int cell in GetColumn(index))
-        {
-            yield return Puzzle[cell];
-        }
     }
 
     public static int GetRowForCell(int index) => index / 3;
