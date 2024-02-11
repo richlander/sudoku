@@ -20,8 +20,9 @@ public class HiddenSinglesSolver : ISolver
     {
         Cell cell = boxCell.Cell;
         int index = cell.Index;
+        IReadOnlyList<int> candidates = puzzle.GetCandidates(index);
 
-        List<int> candidates = puzzle.Candidates[index];
+        // Get boxes
         Box box = boxCell.Box;
         // get adjacent neighboring boxes
         Box ahnb1 = puzzle.GetBox(box.FirstHorizontalNeighbor);
@@ -65,34 +66,31 @@ public class HiddenSinglesSolver : ISolver
         int columnThree = (columnOne + 2) % 3;
         
 
-        var getValuesForBoxRow = (Puzzle p, Box b, int row, IEnumerable<int> values) =>
-        {
-            var rowValues = b.GetRow(row);
-            return p.GetValues(rowValues);
-        };
+        // var getValuesForBoxRow = (Puzzle p, Box b, int row, IEnumerable<int> values) =>
+        // {
+        //     var rowValues = b.GetRow(row);
+        //     return p.GetCellValues(rowValues);
+        // };
 
-        // columns
-        NeighborRows neighborColumns = 
-            new(neighbors.Vertical[0].GetColumnValues(rowTwo),
-                neighbors.Vertical[0].GetColumnValues(rowThree),
-                neighbors.Vertical[1].GetColumnValues(rowTwo),
-                neighbors.Vertical[1].GetColumnValues(rowThree));
+        // // columns
+        // NeighborRows neighborColumns = 
+        //     new(neighbors.Vertical[0].GetColumnValues(rowTwo),
+        //         neighbors.Vertical[0].GetColumnValues(rowThree),
+        //         neighbors.Vertical[1].GetColumnValues(rowTwo),
+        //         neighbors.Vertical[1].GetColumnValues(rowThree));
 
-        List<IEnumerable<int>> Rows = [
-            neighbors.Horizontal[0].GetRowValues(rowOne),
-            neighbors.Horizontal[1].GetRowValues(rowOne),
-            neighbors.Vertical[0].GetColumnValues(columnOne),
-            neighbors.Vertical[1].GetColumnValues(columnOne)
+        List<IEnumerable<int>> rows = [
+            neighbors.Horizontal[0].GetRowIndices(rowOne),
+            neighbors.Horizontal[1].GetRowIndices(rowOne),
+            neighbors.Vertical[0].GetColumnIndices(columnOne),
+            neighbors.Vertical[1].GetColumnIndices(columnOne)
             ];
+        
+        IEnumerable<IEnumerable<List<int>>> rowsCandidates = puzzle.GetCellCandidates(rows);
 
-        HashSet<int> candidates = new(puzzle.Candidates[cell.Index]);
+        HashSet<int> candidates = new(puzzle.GetCandidates(cell.Index));
 
-        if (cell.Index is 79)
-        {
-            
-        }
-
-        foreach(var row in Rows)
+        foreach(var row in rowsCandidates)
         {
             // Candidate unique in column
             if (TrySolveCandidateUniqueInLine(candidates, row))
@@ -108,11 +106,14 @@ public class HiddenSinglesSolver : ISolver
 
     // Remove all lineCandidates
     // Remaining candidates must be unique
-    private static bool TrySolveCandidateUniqueInLine(HashSet<int> cellCandidates, IEnumerable<int> lineCandidates)
+    private static bool TrySolveCandidateUniqueInLine(HashSet<int> cellCandidates, IEnumerable<List<int>> lineCandidates)
     {
-        foreach (int cell in lineCandidates)
+        foreach (IEnumerable<int> neighborCellCandidates in lineCandidates)
         {
-            cellCandidates.Remove(cell);
+            foreach (int candidate in neighborCellCandidates)
+            {
+                cellCandidates.Remove(candidate);
+            }
         }
 
         return cellCandidates.Count is 1;

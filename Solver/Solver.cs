@@ -82,7 +82,7 @@ public static class Solver
             return false;
         }
 
-        BoxCell boxCell = puzzle.BoxCells(index);
+        BoxCell boxCell = Puzzle.GetBoxCell(index);
 
         return solver.TrySolve(puzzle, boxCell, out solution);
     }

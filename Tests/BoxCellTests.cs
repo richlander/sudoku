@@ -12,7 +12,7 @@ public class BoxCellTests
 
         for (int i = 0; i < 81; i++)
         {
-            int boxIndex = Box.GetBoxForCell(i);
+            int boxIndex = Puzzle.BoxByIndices[i];
             Box box = PuzzleData.Puzzle.GetBox(boxIndex);
             BoxCell boxCell = Puzzle.GetBoxCell(box, indices[i]);
             Cell cell = boxCell.Cell;
