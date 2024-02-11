@@ -5,5 +5,5 @@ namespace Sudoku;
     
 public interface ISolver
 {
-    bool TrySolve(Puzzle puzzle, BoxCell cell, [NotNullWhen(true)] out Solution? solution);
+    bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution);
 }

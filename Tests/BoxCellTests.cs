@@ -14,8 +14,7 @@ public class BoxCellTests
         {
             int boxIndex = Puzzle.BoxByIndices[i];
             Box box = PuzzleData.Puzzle.GetBox(boxIndex);
-            BoxCell boxCell = Puzzle.GetBoxCell(box, indices[i]);
-            Cell cell = boxCell.Cell;
+            Cell cell = Puzzle.GetCellForIndex(i);
             Assert.True(cell.Index == i, $"Expected: {i}; Observed: {cell.Index}; Input: {i}");
         }
     }

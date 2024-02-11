@@ -36,14 +36,13 @@ public class NakedSinglesSolver : ISolver
     - Given a horizontal or vertical line, union the other box and appropriate
       6 group cells to remove candidates for cell.
 */
-    public bool TrySolve(Puzzle puzzle, BoxCell boxCell, [NotNullWhen(true)] out Solution? solution)
+    public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
-        Cell cell = boxCell.Cell;
         int index = cell.Index;
         IReadOnlyList<int> candidates = puzzle.GetCandidates(index);
 
         // Get box
-        Box box = boxCell.Box;
+        Box box = puzzle.GetBox(cell.Box);
         // Get adjacent neighboring boxes
         Box ahnb1 = puzzle.GetBox(box.FirstHorizontalNeighbor);
         Box ahnb2 = puzzle.GetBox(box.SecondHorizontalNeighbor);
@@ -51,36 +50,37 @@ public class NakedSinglesSolver : ISolver
         Box avnb2 = puzzle.GetBox(box.SecondVerticalNeighbor);
 
         // Get row and column indices
-        int rowOne = boxCell.Row;
-        int columnOne = boxCell.Column;
+        int rowOne = Puzzle.BoxRowByIndices[index];
+        int columnOne = Puzzle.BoxColumnByIndices[index];
 
-        // Get 
+        // The two rows and two columns each need to be considered together
         List<IEnumerable<int>> lines = [
-            ahnb1.GetRowIndices(rowOne),
-            ahnb2.GetRowIndices(rowOne),
-            avnb1.GetColumnIndices(columnOne),
-            avnb2.GetColumnIndices(columnOne)];
+            ahnb1.GetRowIndices(rowOne).Concat(ahnb2.GetRowIndices(rowOne)),
+            avnb1.GetColumnIndices(columnOne).Concat(avnb2.GetColumnIndices(columnOne)),
+            ];
 
         HashSet<int> matches = [];
 
-        foreach(IEnumerable<int> line in lines)
+        foreach (IEnumerable<int> line in lines)
         {
-            FindCandidatesToRemove(candidates, line, matches);
-
-            // Solution found
-            if (candidates.Count - matches.Count is 1)
+            foreach (int lineIndex in line)
             {
-                int value = candidates.Except(matches).Single();
-                solution = new(cell, value, matches, nameof(NakedSinglesSolver));
-                return true;
-            }
-        }
+                if (puzzle.IsCellSolved(lineIndex))
+                {
+                    continue;
+                }
 
-        // Candidates can be removed
-        if (matches.Count > 0)
-        {
-            solution = new(cell, -1, matches, nameof(NakedSinglesSolver));
-            return true;
+                FindCandidatesToRemove(candidates, puzzle.GetCandidates(lineIndex), matches);
+
+                // Solution found
+                if (candidates.Count - matches.Count is 1)
+                {
+                    int value = candidates.Except(matches).Single();
+                    solution = new(cell, value, matches, nameof(NakedSinglesSolver));
+                    return true;
+                }
+
+            }
         }
 
         solution = null;
@@ -88,7 +88,7 @@ public class NakedSinglesSolver : ISolver
     }
 
     // Identify candidates that are cancelled out by their existence in neighboring areas
-    private static void FindCandidatesToRemove(IReadOnlyList<int> candidates, IEnumerable<int> values, HashSet<int> removalCandidates)
+    private void FindCandidatesToRemove(IReadOnlyList<int> candidates, IEnumerable<int> values, HashSet<int> removalCandidates)
     {
         foreach (int value in values)
         {

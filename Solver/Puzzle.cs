@@ -9,20 +9,20 @@ using System.Text;
 namespace Sudoku;
 public partial class Puzzle
 {
+    private readonly int[] _board = new int[81];
     private readonly int[] _solvedForRow = new int[9];
     private readonly int[] _solvedForColumn = new int[9];
     private readonly int[] _solvedForBox = new int[9];
     private readonly Box[] _boxes = new Box[9];
-    private readonly int[] _cells = new int[81];
+    private readonly Cell[] _cells = new Cell[81];
     private readonly List<int>[] _candidates = new List<int>[81];
-    private readonly BoxCell[] _boxCells = new BoxCell[81];
     private readonly List<int> _empty = [];
     
     public Puzzle(string puzzle)
     {
         InitializePuzzle(puzzle);
-        InitializeCellInfo();
-        InitializeCandidates();
+        IntializeBoxes();
+        InitializeCells();
         CountCells();
     }
 
@@ -33,16 +33,16 @@ public partial class Puzzle
         line    -- 9 indices or values in a box, column, or box
     */
 
-    // Cell values
-    public int this[int index] => _cells[index];
+    // Board values
+    public int this[int index] => _board[index];
 
-    public int GetCell(int index ) => _cells[index];
+    public int GetValue(int index ) => _board[index];
 
     public IEnumerable<int> GetCellValues(IEnumerable<int> line)
     {
         foreach(int index in line)
         {
-            yield return _cells[index];
+            yield return _board[index];
         }
     }
 
@@ -53,11 +53,11 @@ public partial class Puzzle
             yield return GetCellValues(line);
         }
     }
-    public IEnumerable<int> GetBoxValues(int index) => GetCellValues(IndicesForBox(index));
+    public IEnumerable<int> GetBoxValues(int index) => GetCellValues(GetBoxIndices(index));
 
-    public IEnumerable<int> GetColumnValues(int index) => GetCellValues(IndicesForColumn(index));
+    public IEnumerable<int> GetColumnValues(int index) => GetCellValues(GetColumnIndices(index));
 
-    public IEnumerable<int> GetRowValues(int index) => GetCellValues(IndicesForRow(index));
+    public IEnumerable<int> GetRowValues(int index) => GetCellValues(GetRowIndices(index));
 
     // Cell candidates
     public IReadOnlyList<int> GetCandidates(int index) => _candidates[index];
@@ -78,8 +78,12 @@ public partial class Puzzle
         }
     }
 
-    // Box values
+    // Unit info
     public Box GetBox(int index) => _boxes[index];
+
+    public Cell GetCell(int index) => _cells[index];
+
+    public (int rowIndex, int columnIndex) GetBoxCellInfo(int index) => (BoxRowByIndices[index], BoxColumnByIndices[index]);
 
     // Solution data
     public int SolvedCellsInitial {get; private set; }
@@ -94,12 +98,12 @@ public partial class Puzzle
 
     public bool IsSolved => SolvedCells is 81 && IsValid();
 
-    public bool IsCellSolved(int index) => _cells[index] is not 0;
+    public bool IsCellSolved(int index) => _board[index] is not 0;
 
     // Validation
     public bool IsValid()
     {
-        foreach (Cell duplicate in FindDuplicatesCells())
+        foreach (var _ in FindDuplicatesCells())
         {
             return false;
         }
@@ -107,40 +111,38 @@ public partial class Puzzle
         return true;
     }
 
-    public IEnumerable<Cell> FindDuplicatesCells()
+    public IEnumerable<int> FindDuplicatesCells()
     {
         for (int i = 0; i < 9; i++)
         {
-            foreach(var (value, index) in FindDuplicates(GetRowValues(i)))
+            foreach(int index in FindDuplicates(GetRowIndices(i)))
             {
-                yield return CellForRowIndex(i, index, value);
+                yield return index;
             }
 
-            foreach(var (value, index) in FindDuplicates(GetColumnValues(i)))
+            foreach(int index in FindDuplicates(GetColumnIndices(i)))
             {
-                yield return CellForColumnIndex(i, index, value);;
+                yield return index;
             }
 
-            foreach(var (value, index) in FindDuplicates(GetBoxValues(i)))
+            foreach(int index in FindDuplicates(GetBoxIndices(i)))
             {
-                yield return CellForBoxIndex(i, index, value);
+                yield return index;
             }
         }
     }
 
-    private static IEnumerable<(int Index, int Value)> FindDuplicates(IEnumerable<int> line)
+    private IEnumerable<int> FindDuplicates(IEnumerable<int> line)
     {
         HashSet<int> values = [];
-        int count = 0;
 
-        foreach (var value in line)
+        foreach (var index in line)
         {
+            int value = GetValue(index);
             if (!values.Add(value))
             {
-                yield return (count, value);
+                yield return index;
             }
-
-            count++;
         }
     }
 
@@ -174,7 +176,7 @@ public partial class Puzzle
     public void Update(Solution solution)
     {
         int index = solution.Cell.Index;
-        if (_cells[index] != 0 || SolvedCells is 81)
+        if (_board[index] != 0 || SolvedCells is 81)
         {
             throw new Exception("Something went wrong! Oops.");    
         }
@@ -190,7 +192,7 @@ public partial class Puzzle
             return;
         }
 
-        _cells[index] = solution.Value;
+        _board[index] = solution.Value;
         SolvedCells++;
         _solvedForRow[solution.Cell.Row]++;
         _solvedForColumn[solution.Cell.Column]++;
@@ -202,11 +204,12 @@ public partial class Puzzle
     public override string ToString()
     {
         var buffer = new StringBuilder();
-        foreach(int num in _cells)
+        foreach (int num in _board)
         {
             char cell = num is 0 ? '.' : (char)('0' + num);
             buffer.Append(cell);
         }
+
         return buffer.ToString();
     }
 
@@ -214,57 +217,49 @@ public partial class Puzzle
     private void InitializePuzzle(string puzzle)
     {
         ArgumentNullException.ThrowIfNullOrEmpty(puzzle);
-        puzzle = puzzle is  {Length: 81} ? puzzle : throw new Exception("Puzzle is wrong length");
+        puzzle = puzzle is {Length: 81} ? puzzle : throw new Exception("Puzzle is wrong length");
 
         for (int i = 0; i < puzzle.Length; i++)
         {
             char c = puzzle[i];
-            _cells[i] = c is '.' ? 0 : c - '0';
+            _board[i] = c is '.' ? 0 : c - '0';
         }
     }
 
-    private void InitializeCellInfo()
-    {
-        for (int i = 0; i < 9; i++)
-        {
-            Box box = new(i);
-            _boxes[i] = box;
-
-            for (int j = 0; j < 9; j++)
-            {
-                BoxCell boxCell = GetBoxCell(box, j);
-                _boxCells[boxCell.Cell.Index] = boxCell;
-            }
-        }
-    }
-
-    public static BoxCell GetBoxCell(Box box, int boxIndex)
-    {
-        int puzzleIndex = IndicesByBox[box.Index * 9 + boxIndex];
-        int row = RowByIndices[puzzleIndex];
-        int column = ColumnByIndices[puzzleIndex];
-        Cell cell = new(puzzleIndex, row, column, box.Index);
-        BoxCell boxCell = new(cell, box, boxIndex, BoxRowByIndices[puzzleIndex], BoxColumnByIndices[puzzleIndex]);
-        return boxCell;
-    }
-
-    private void InitializeCandidates()
+    private void InitializeCells()
     {
         for (int i = 0; i < 81; i++)
         {
-            if (_cells[i] is not 0)
-            {
-                _candidates[i] = _empty;
-                continue;
-            }
+            Cell cell = GetCellForIndex(i);
+            _cells[i] = cell;
 
-            BoxCell boxCell = _boxCells[i];
-            Cell cell = boxCell.Cell;
-            var boxCells = GetBoxValues(boxCell.Box.Index);
-            var rowCells = GetRowValues(cell.Row);
-            var columnCells = GetColumnValues(cell.Column);
-            _candidates[i] = Enumerable.Range(1, 9).Except(boxCells).Except(rowCells).Except(columnCells).ToList();
-        } 
+            InitializeCandidates(cell);
+        }
+    }
+
+    private void IntializeBoxes()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            _boxes[i] = new Box(i);
+        }
+    }
+
+    private void InitializeCandidates(Cell cell)
+    {
+        int index = cell.Index;
+
+        if (_board[cell.Index] is not 0)
+        {
+            _candidates[index] = _empty;
+            return;
+        }
+
+        var boxValues = GetBoxValues(cell.Box);
+        var rowValues = GetRowValues(cell.Row);
+        var columnValues = GetColumnValues(cell.Column);
+        _candidates[index] = Enumerable.Range(1, 9).Except(boxValues).Except(rowValues).Except(columnValues).ToList();
+    } 
 
     // public IEnumerable<int> GetCellsForRow(int index) => Cells.Skip(index * 9).Take(9);
 
@@ -358,5 +353,4 @@ public partial class Puzzle
     //     BoxCell boxCell = new(cell, box, boxIndex, Box.GetRowForCell(boxIndex), Box.GetColumnForCell(boxIndex));
     //     return boxCell;
     // }
-    }
 }

@@ -69,21 +69,20 @@ public static class Solver
             }
         }
 
-        solution = default;
+        solution = null;
         return false;
     }
 
     public static bool TrySolveCell(Puzzle puzzle, ISolver solver, int index, [NotNullWhen(true)] out Solution? solution)
     {
-        solution = default;
+        solution = null;
 
         if (puzzle.IsCellSolved(index))
         {
             return false;
         }
 
-        BoxCell boxCell = Puzzle.GetBoxCell(index);
-
-        return solver.TrySolve(puzzle, boxCell, out solution);
+        Cell cell = puzzle.GetCell(index);
+        return solver.TrySolve(puzzle, cell, out solution);
     }
 }

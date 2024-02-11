@@ -16,14 +16,13 @@ namespace Sudoku;
 
 public class HiddenSinglesSolver : ISolver
 {
-    public bool TrySolve(Puzzle puzzle, BoxCell boxCell, [NotNullWhen(true)] out Solution? solution)
+    public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
-        Cell cell = boxCell.Cell;
         int index = cell.Index;
         IReadOnlyList<int> candidates = puzzle.GetCandidates(index);
 
         // Get boxes
-        Box box = boxCell.Box;
+        Box box = puzzle.GetBox(cell.Box);
         // get adjacent neighboring boxes
         Box ahnb1 = puzzle.GetBox(box.FirstHorizontalNeighbor);
         Box ahnb2 = puzzle.GetBox(box.SecondHorizontalNeighbor);
@@ -42,23 +41,22 @@ public class HiddenSinglesSolver : ISolver
         //     return true;
         // }
 
-        if (TrySolveCell(puzzle, boxCell, neighbors, out solution))
+        if (TrySolveCell(puzzle, cell, neighbors, out solution))
         {
             return true;
         }
 
-        solution = default;
+        solution = null;
         return false;
     }
 
         // Determine which candidates are unique in the given cell per each unit (box, column, row)
     // If there are unique candidates, remove the ones that are not unique
     // If there is just one candidate, then that's the solution
-    private static bool TrySolveCell(Puzzle puzzle, BoxCell boxCell, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
+    private static bool TrySolveCell(Puzzle puzzle, Cell cell, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
     {
-        Cell cell = boxCell.Cell;
-        int rowOne = boxCell.Row;
-        int columnOne = boxCell.Column;
+        int rowOne = cell.BoxRow;
+        int columnOne = cell.BoxColumn;
         // find neighbor
         int rowTwo = (rowOne + 1) % 3;
         int rowThree = (rowOne + 2) % 3;
@@ -95,12 +93,12 @@ public class HiddenSinglesSolver : ISolver
             // Candidate unique in column
             if (TrySolveCandidateUniqueInLine(candidates, row))
             {
-                solution = null!;
+                solution = new(cell, candidates.Single(), candidates, nameof(NakedSinglesSolver));
                 return true;
             }
         }
 
-        solution = default;
+        solution = null;
         return false;
     }
 
@@ -154,7 +152,7 @@ public class HiddenSinglesSolver : ISolver
     //         }
     //     }
 
-    //     solution = default;
+    //     solution = null;
     //     return false;
     // }
 
@@ -185,7 +183,7 @@ public class HiddenSinglesSolver : ISolver
     //         }
     //     }
 
-    //     solution = default;
+    //     solution = null;
     //     return false;
     // }    
 

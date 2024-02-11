@@ -16,13 +16,13 @@
 //             }
 //         }
         
-//         solution = default;
+//         solution = null;
 //         return false;
 //     }
 
 //     private bool TrySolveRow(int index, Puzzle puzzle, [NotNullWhen(true)] out Solution? solution)
 //     {
-//         solution = default;
+//         solution = null;
 
 //         if (puzzle.SolvedForRow(index) != 8)
 //         {
@@ -42,7 +42,7 @@
 
 //     private bool TrySolveColumn(int index, Puzzle puzzle, [NotNullWhen(true)] out Solution? solution)
 //     {
-//         solution = default;
+//         solution = null;
 
 //         if (puzzle.SolvedForRow(index) != 8)
 //         {
@@ -53,7 +53,7 @@
 
 //         if (missingValue is -1)
 //         {
-//             solution = default;
+//             solution = null;
 //             return false;
 //         }
 
@@ -63,7 +63,7 @@
 
 //     private bool TrySolveBox(int index, Puzzle puzzle, [NotNullWhen(true)] out Solution? solution)
 //     {
-//         solution = default;
+//         solution = null;
 
 //         if (puzzle.SolvedForRow(index) != 8)
 //         {
