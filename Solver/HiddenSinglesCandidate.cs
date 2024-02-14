@@ -19,7 +19,7 @@ public class HiddenSinglesSolver : ISolver
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
         int index = cell.Index;
-        IReadOnlyList<int> candidates = puzzle.GetCandidates(index);
+        IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
 
         // Get boxes
         Box box = puzzle.GetBox(cell.Box);
@@ -50,50 +50,28 @@ public class HiddenSinglesSolver : ISolver
         return false;
     }
 
-        // Determine which candidates are unique in the given cell per each unit (box, column, row)
+    // Determine which candidates are unique in the given cell per each unit (box, column, row)
     // If there are unique candidates, remove the ones that are not unique
     // If there is just one candidate, then that's the solution
     private static bool TrySolveCell(Puzzle puzzle, Cell cell, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
     {
         int rowOne = cell.BoxRow;
         int columnOne = cell.BoxColumn;
-        // find neighbor
-        int rowTwo = (rowOne + 1) % 3;
-        int rowThree = (rowOne + 2) % 3;
-        int columnTwo = (columnOne + 1) % 3;
-        int columnThree = (columnOne + 2) % 3;
+
+        List<IEnumerable<int>> lines = [
+            Puzzle.GetBoxIndices(cell.Box),
+            Puzzle.GetRowIndices(cell.Row),
+            Puzzle.GetColumnIndices(cell.Column)
+        ];
         
-
-        // var getValuesForBoxRow = (Puzzle p, Box b, int row, IEnumerable<int> values) =>
-        // {
-        //     var rowValues = b.GetRow(row);
-        //     return p.GetCellValues(rowValues);
-        // };
-
-        // // columns
-        // NeighborRows neighborColumns = 
-        //     new(neighbors.Vertical[0].GetColumnValues(rowTwo),
-        //         neighbors.Vertical[0].GetColumnValues(rowThree),
-        //         neighbors.Vertical[1].GetColumnValues(rowTwo),
-        //         neighbors.Vertical[1].GetColumnValues(rowThree));
-
-        List<IEnumerable<int>> rows = [
-            neighbors.Horizontal[0].GetRowIndices(rowOne),
-            neighbors.Horizontal[1].GetRowIndices(rowOne),
-            neighbors.Vertical[0].GetColumnIndices(columnOne),
-            neighbors.Vertical[1].GetColumnIndices(columnOne)
-            ];
-        
-        IEnumerable<IEnumerable<List<int>>> rowsCandidates = puzzle.GetCellCandidates(rows);
-
-        HashSet<int> candidates = new(puzzle.GetCandidates(cell.Index));
-
-        foreach(var row in rowsCandidates)
+        foreach(IEnumerable<int> line in lines)
         {
+            HashSet<int> candidates = new(puzzle.GetCellCandidates(cell));
             // Candidate unique in column
-            if (TrySolveCandidateUniqueInLine(candidates, row))
+            if (TrySolveCandidateUniqueInLine(puzzle, candidates, line, cell))
             {
-                solution = new(cell, candidates.Single(), candidates, nameof(NakedSinglesSolver));
+                int value = candidates.Single();
+                solution = new(cell, value, candidates, nameof(HiddenSinglesSolver));
                 return true;
             }
         }
@@ -104,11 +82,16 @@ public class HiddenSinglesSolver : ISolver
 
     // Remove all lineCandidates
     // Remaining candidates must be unique
-    private static bool TrySolveCandidateUniqueInLine(HashSet<int> cellCandidates, IEnumerable<List<int>> lineCandidates)
+    private static bool TrySolveCandidateUniqueInLine(Puzzle puzzle, HashSet<int> cellCandidates, IEnumerable<int> line, int cellToSkip)
     {
-        foreach (IEnumerable<int> neighborCellCandidates in lineCandidates)
+        foreach (int index in line)
         {
-            foreach (int candidate in neighborCellCandidates)
+            if (index == cellToSkip)
+            {
+                continue;
+            }
+
+            foreach (int candidate in puzzle.GetCellCandidates(index))
             {
                 cellCandidates.Remove(candidate);
             }
@@ -116,100 +99,6 @@ public class HiddenSinglesSolver : ISolver
 
         return cellCandidates.Count is 1;
     }
-
-    // private bool TrySolveRowOneCellUnsolved(Puzzle puzzle, BoxCell boxCell, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
-    // {
-    //     Box box = boxCell.Box;
-    //     bool oneUnsolved = box.GetRowValues(boxCell.Row).Count(num => num is 0) is 1;
-
-    //     if (oneUnsolved)
-    //     {
-    //         int cellIndex = boxCell.Cell.Index;
-    //         List<int> candidates = puzzle.Candidates[cellIndex];
-    //         int rowIndex =  boxCell.Row;
-
-    //         // find neighbors
-    //         int two = (rowIndex + 1) % 3;
-    //         int three = (rowIndex + 2) % 3;
-
-    //         var getValuesForBoxRow = (Puzzle p, Box b, int row, IEnumerable<int> values) =>
-    //         {
-    //             var rowValues = b.GetRow(row);
-    //             return p.GetValues(rowValues);
-    //         };
-
-    //         NeighborRows neighborRows = new(
-    //             getValuesForBoxRow(puzzle, box, neighbors.Horizontal[0])
-    //             neighbors.Horizontal[0].GetRowValues(two),
-    //             neighbors.Horizontal[0].GetRowValues(three),
-    //             neighbors.Horizontal[1].GetRowValues(two),
-    //             neighbors.Horizontal[1].GetRowValues(three));
-
-    //         if (TrySolveRowOneCellUnsolvedForRow(candidates, box.GetRow(rowIndex), neighborRows, out int value))
-    //         {
-    //             solution = new(boxCell.Cell, value, [], nameof(HiddenSinglesSolver));
-    //             return true;
-    //         }
-    //     }
-
-    //     solution = null;
-    //     return false;
-    // }
-
-    // private bool TrySolveColumnOneCellUnsolved(Puzzle puzzle, BoxCell boxCell, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
-    // {
-    //     Box box = boxCell.Box;
-    //     bool oneUnsolved = box.GetColumnValues(boxCell.Column).Count(num => num is 0) is 1;
-
-    //     if (oneUnsolved)
-    //     {
-    //         int cellIndex = boxCell.Cell.Index;
-    //         List<int> candidates = puzzle.Candidates[cellIndex];
-    //         int columnIndex =  boxCell.Column;
-
-    //         // find neighbors
-    //         int two = (columnIndex + 1) % 3;
-    //         int three = (columnIndex + 2) % 3;
-
-    //         NeighborRows neighborRows = new(neighbors.Vertical[0].GetColumn(two),
-    //                                         neighbors.Vertical[0].GetColumnValues(three),
-    //                                         neighbors.Vertical[1].GetColumnValues(two),
-    //                                         neighbors.Vertical[1].GetColumnValues(three));
-
-    //         if (TrySolveRowOneCellUnsolvedForRow(candidates, box.GetColumn(columnIndex), neighborRows, out int value))
-    //         {
-    //             solution = new(boxCell.Cell, value, [], nameof(HiddenSinglesSolver));
-    //             return true;
-    //         }
-    //     }
-
-    //     solution = null;
-    //     return false;
-    // }    
-
-    // // One cell unsolved in row
-    // private static bool TrySolveRowOneCellUnsolvedForRow(IEnumerable<int> candidates, IEnumerable<int> row, NeighborRows neighbors, out int value)
-    // {
-    //     // Union each row -- all the values that cannot be in those rows within the box
-    //     IEnumerable<int> neighborRow2Union = neighbors.Box1Row2.Union(neighbors.Box2Row2);
-    //     IEnumerable<int> neighborRow3Union = neighbors.Box1Row3.Union(neighbors.Box2Row3);
-        
-    //     // Determine matching candidates
-    //     IEnumerable<int> row2Candidates = neighborRow2Union.Intersect(candidates);
-    //     IEnumerable<int> row3Candidates = neighborRow3Union.Intersect(candidates);
-
-    //     // If there is one matching candidate, then we have a solution
-    //     IEnumerable<int> row1Candidates = row2Candidates.Intersect(row3Candidates);
-
-    //     if (row1Candidates.ValueIfCountExact(1, out value))
-    //     {
-    //         return true;
-    //     }
-
-    //     return false;
-    // }
 }
-
-record NeighborRows(IEnumerable<int> Box1Row2, IEnumerable<int> Box1Row3, IEnumerable<int> Box2Row2, IEnumerable<int> Box2Row3);
 
 record NeighborBoxes(Box[] Horizontal, Box[] Vertical);

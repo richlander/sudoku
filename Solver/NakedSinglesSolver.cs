@@ -39,7 +39,15 @@ public class NakedSinglesSolver : ISolver
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
         int index = cell.Index;
-        IReadOnlyList<int> candidates = puzzle.GetCandidates(index);
+        IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
+
+        // if (candidates.Count is 1)
+        // {
+        //     Console.WriteLine("Strange but true.");
+        //     int value = candidates.Single();
+        //     solution = new(cell, value, [], nameof(NakedSinglesSolver));
+        //     return true;
+        // }
 
         // Get box
         Box box = puzzle.GetBox(cell.Box);
@@ -53,34 +61,31 @@ public class NakedSinglesSolver : ISolver
         int rowOne = Puzzle.BoxRowByIndices[index];
         int columnOne = Puzzle.BoxColumnByIndices[index];
 
-        // The two rows and two columns each need to be considered together
         List<IEnumerable<int>> lines = [
-            ahnb1.GetRowIndices(rowOne).Concat(ahnb2.GetRowIndices(rowOne)),
-            avnb1.GetColumnIndices(columnOne).Concat(avnb2.GetColumnIndices(columnOne)),
-            ];
+            ahnb1.GetRowIndices(rowOne),
+            ahnb2.GetRowIndices(rowOne),
+            avnb1.GetColumnIndices(columnOne),
+            avnb2.GetColumnIndices(columnOne)];
 
         HashSet<int> matches = [];
 
         foreach (IEnumerable<int> line in lines)
         {
-            foreach (int lineIndex in line)
+            FindCandidatesToRemove(candidates, puzzle.GetCellValues(line), matches);
+            
+            // Solution found
+            if (candidates.Count - matches.Count is 1)
             {
-                if (puzzle.IsCellSolved(lineIndex))
-                {
-                    continue;
-                }
-
-                FindCandidatesToRemove(candidates, puzzle.GetCandidates(lineIndex), matches);
-
-                // Solution found
-                if (candidates.Count - matches.Count is 1)
-                {
-                    int value = candidates.Except(matches).Single();
-                    solution = new(cell, value, matches, nameof(NakedSinglesSolver));
-                    return true;
-                }
-
+                int value = candidates.Except(matches).Single();
+                solution = new(cell, value, matches, nameof(NakedSinglesSolver));
+                return true;
             }
+        }
+
+        if (matches.Count > 0)
+        {
+            solution = new(cell, -1, matches, nameof(NakedSinglesSolver));
+            return true;
         }
 
         solution = null;
@@ -92,6 +97,11 @@ public class NakedSinglesSolver : ISolver
     {
         foreach (int value in values)
         {
+            if (value is 0)
+            {
+                continue;
+            }
+
             if (candidates.Contains(value))
             {
                 removalCandidates.Add(value);

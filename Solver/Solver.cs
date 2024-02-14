@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -10,67 +11,65 @@ public static class Solver
     public static void Solve(Puzzle puzzle, List<ISolver> solvers)
     {
         int solutions = 0;
-        bool solved = true;
+        bool solutionsFound = true;
+        SolvedCellsSolver solvedCellsSolver = new();
 
-        while (solved)
+        SolverPlaylist playlist = new(solvers);
+        playlist.Add(solvedCellsSolver);
+
+        while (solutionsFound)
         {
-            solved = false;
+            solutionsFound = false;
 
-            foreach(ISolver solver in solvers)
+            foreach(ISolver solver in playlist.Play())
             {
-                int startIndex = 0;
-                while (TrySolve(puzzle, solver, startIndex, out int lastIndex, out Solution? solution))
+                int newSolutions = 0;
+                List<Solution> solutionBag = new(12);
+
+                // Search for solutions across board
+                for (int i = 0; i < 81; i++)
                 {
-                    Cell cell = solution.Cell;
-                    if (solution.Value > 0)
+                    if (TrySolveCell(puzzle, solver, i, out Solution? solution))
                     {
-                        solutions++;
+                        solutionBag.Add(solution);
+                    }
+                }
+                
+                // Found nothing so bail
+                if (solutionBag.Count is 0)
+                {
+                    continue;
+                }
+
+                Console.WriteLine("**Stage**");
+                // Process solutions
+                foreach (Solution solution in solutionBag)
+                {
+                    if (puzzle.Update(solution))
+                    {
+                        newSolutions++;
+                        Cell cell = solution.Cell;
                         Console.WriteLine($"{cell.Row},{cell.Column}: {solution.Value}; {solution.Solver}");
-                    }
-
-                    puzzle.Update(solution);
-                    solved = true;
-
-                    if (puzzle.IsSolved)
-                    {
-                        Console.WriteLine($"Puzzle is solved!");
-                        return;    
-                    }
-
-                    startIndex = lastIndex + 1;
-
-                    if (lastIndex >= 80)
-                    {
-                        break;
                     }
                 }
 
+                solutions += newSolutions;
+                
                 if (puzzle.IsSolved)
                 {
                     Console.WriteLine($"Puzzle is solved!");
-                    return;
+                    return;    
                 }
+
+                solutionsFound |= newSolutions > 0;
+                puzzle.UpdateCandidates();
+
+                playlist.Add(solvedCellsSolver);
             }
         }
 
         Console.WriteLine($"Final puzzle with {solutions} solutions applied");
         Console.WriteLine(puzzle.ToString());
-    }
-
-    public static bool TrySolve(Puzzle puzzle, ISolver solver, int startIndex, out int lastIndex, [NotNullWhen(true)] out Solution? solution)
-    {
-        lastIndex = 80;
-        for (int i = startIndex; i <= lastIndex; i++)
-        {
-            if (TrySolveCell(puzzle, solver, i, out solution))
-            {
-                lastIndex = i;
-                return true;
-            }
-        }
-
-        solution = null;
-        return false;
     }
 
     public static bool TrySolveCell(Puzzle puzzle, ISolver solver, int index, [NotNullWhen(true)] out Solution? solution)
