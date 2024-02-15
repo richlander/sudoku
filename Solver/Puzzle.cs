@@ -11,9 +11,6 @@ namespace Sudoku;
 public partial class Puzzle
 {
     private readonly int[] _board = new int[81];
-    private readonly int[] _solvedForRow = new int[9];
-    private readonly int[] _solvedForColumn = new int[9];
-    private readonly int[] _solvedForBox = new int[9];
     private readonly Box[] _boxes = new Box[9];
     private readonly Cell[] _cells = new Cell[81];
     private readonly List<int>[] _candidates = new List<int>[81];
@@ -77,23 +74,31 @@ public partial class Puzzle
     }
 
     // Unit info
+    public Cell GetCell(int index) => _cells[index];
+    
     public Box GetBox(int index) => _boxes[index];
 
-    public Cell GetCell(int index) => _cells[index];
+    public BoxSet GetBoxSet(int index)
+    {
+        // Get boxes
+        Box box = GetBox(index);
+        // get adjacent neighboring boxes
+        Box ahnb1 = GetBox(box.FirstHorizontalNeighbor);
+        Box ahnb2 = GetBox(box.SecondHorizontalNeighbor);
+        Box avnb1 = GetBox(box.FirstVerticalNeighbor);
+        Box avnb2 = GetBox(box.SecondVerticalNeighbor);
 
-    public (int rowIndex, int columnIndex) GetBoxCellInfo(int index) => (BoxRowByIndices[index], BoxColumnByIndices[index]);
+        return new BoxSet(
+            box,
+            ahnb1,
+            ahnb2,
+            avnb1,
+            avnb2);
+    }
 
-    // Solution data
-    public int SolvedCellsInitial {get; private set; }
-    
+    // Solution data  
     public int SolvedCells {get; private set; }
     
-    public int SolvedForBox(int index) => _solvedForBox[index];
-    
-    public int SolvedForRow(int index) => _solvedForRow[index];
-
-    public int SolvedForColumn(int index) => _solvedForColumn[index];
-
     public bool IsSolved => SolvedCells is 81 && IsValid();
 
     public bool IsCellSolved(int index) => _board[index] is not 0;
@@ -181,12 +186,7 @@ public partial class Puzzle
         for (int i = 0; i < 9; i++)
         {
             _boxes[i] = new Box(i);
-
-            static bool count(int x) => x > 0;
-            _solvedForRow[i]+= GetRowValues(i).Count(count);
-            _solvedForColumn[i]+= GetColumnValues(i).Count(count);
-            _solvedForBox[i]+= GetBoxValues(i).Count(count);
-            SolvedCells += _solvedForRow[i];
+            SolvedCells = GetRowValues(i).Count(x => x > 0);
         }
     }
 
@@ -213,9 +213,6 @@ public partial class Puzzle
 
         _board[index] = solution.Value;
         SolvedCells++;
-        _solvedForRow[cell.Row]++;
-        _solvedForColumn[cell.Column]++;
-        _solvedForBox[cell.Box]++;
         _candidates[index] = _emptyList;
 
         // `true` indicators that a new board value was found

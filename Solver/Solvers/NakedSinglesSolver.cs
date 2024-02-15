@@ -38,28 +38,12 @@ public class NakedSinglesSolver : ISolver
 */
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
-        int index = cell.Index;
-        IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
-
-        // if (candidates.Count is 1)
-        // {
-        //     Console.WriteLine("Strange but true.");
-        //     int value = candidates.Single();
-        //     solution = new(cell, value, [], nameof(NakedSinglesSolver));
-        //     return true;
-        // }
-
-        // Get box
-        Box box = puzzle.GetBox(cell.Box);
-        // Get adjacent neighboring boxes
-        Box ahnb1 = puzzle.GetBox(box.FirstHorizontalNeighbor);
-        Box ahnb2 = puzzle.GetBox(box.SecondHorizontalNeighbor);
-        Box avnb1 = puzzle.GetBox(box.FirstVerticalNeighbor);
-        Box avnb2 = puzzle.GetBox(box.SecondVerticalNeighbor);
-
+        IReadOnlyList<int> candidates = puzzle.GetCellCandidates(cell);
         // Get row and column indices
-        int rowOne = Puzzle.BoxRowByIndices[index];
-        int columnOne = Puzzle.BoxColumnByIndices[index];
+        int rowOne = Puzzle.BoxRowByIndices[cell];
+        int columnOne = Puzzle.BoxColumnByIndices[cell];
+        // Get boxes
+        var (box, ahnb1, ahnb2, avnb1, avnb2) = puzzle.GetBoxSet(cell.Box);
 
         List<IEnumerable<int>> lines = [
             ahnb1.GetRowIndices(rowOne),
@@ -93,7 +77,7 @@ public class NakedSinglesSolver : ISolver
     }
 
     // Identify candidates that are cancelled out by their existence in neighboring areas
-    private void FindCandidatesToRemove(IReadOnlyList<int> candidates, IEnumerable<int> values, HashSet<int> removalCandidates)
+    private static void FindCandidatesToRemove(IReadOnlyList<int> candidates, IEnumerable<int> values, HashSet<int> removalCandidates)
     {
         foreach (int value in values)
         {

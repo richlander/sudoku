@@ -16,53 +16,15 @@ namespace Sudoku;
 
 public class HiddenSinglesSolver : ISolver
 {
-    public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
-    {
-        int index = cell.Index;
-        IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
-
-        // Get boxes
-        Box box = puzzle.GetBox(cell.Box);
-        // get adjacent neighboring boxes
-        Box ahnb1 = puzzle.GetBox(box.FirstHorizontalNeighbor);
-        Box ahnb2 = puzzle.GetBox(box.SecondHorizontalNeighbor);
-        Box avnb1 = puzzle.GetBox(box.FirstVerticalNeighbor);
-        Box avnb2 = puzzle.GetBox(box.SecondVerticalNeighbor);
-
-        NeighborBoxes neighbors = new([ ahnb1, ahnb2 ], [ avnb1, avnb2 ]);
-
-        // if (TrySolveRowOneCellUnsolved(puzzle, boxCell, neighbors, out solution))
-        // {
-        //     return true;
-        // }
-
-        // if (TrySolveColumnOneCellUnsolved(puzzle, boxCell, neighbors, out solution))
-        // {
-        //     return true;
-        // }
-
-        if (TrySolveCell(puzzle, cell, neighbors, out solution))
-        {
-            return true;
-        }
-
-        solution = null;
-        return false;
-    }
-
     // Determine which candidates are unique in the given cell per each unit (box, column, row)
     // If there are unique candidates, remove the ones that are not unique
     // If there is just one candidate, then that's the solution
-    private static bool TrySolveCell(Puzzle puzzle, Cell cell, NeighborBoxes neighbors, [NotNullWhen(true)] out Solution? solution)
+    public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
-        int rowOne = cell.BoxRow;
-        int columnOne = cell.BoxColumn;
-
         List<IEnumerable<int>> lines = [
             Puzzle.GetBoxIndices(cell.Box),
             Puzzle.GetRowIndices(cell.Row),
-            Puzzle.GetColumnIndices(cell.Column)
-        ];
+            Puzzle.GetColumnIndices(cell.Column)];
         
         foreach(IEnumerable<int> line in lines)
         {
@@ -100,5 +62,3 @@ public class HiddenSinglesSolver : ISolver
         return cellCandidates.Count is 1;
     }
 }
-
-record NeighborBoxes(Box[] Horizontal, Box[] Vertical);

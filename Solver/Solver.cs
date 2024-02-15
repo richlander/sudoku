@@ -13,13 +13,12 @@ public static class Solver
         int solutions = 0;
         bool solutionsFound = true;
         SolvedCellsSolver solvedCellsSolver = new();
-
         SolverPlaylist playlist = new(solvers);
-        playlist.Add(solvedCellsSolver);
 
         while (solutionsFound)
         {
             solutionsFound = false;
+            playlist.Add(solvedCellsSolver);
 
             foreach(ISolver solver in playlist.Play())
             {
@@ -32,6 +31,14 @@ public static class Solver
                     if (TrySolveCell(puzzle, solver, i, out Solution? solution))
                     {
                         solutionBag.Add(solution);
+
+                        Solution? next = solution.Next;
+                        
+                        while (next is not null)
+                        {
+                            solutionBag.Add(next);
+                            next = next.Next;
+                        }
                     }
                 }
                 
@@ -43,13 +50,32 @@ public static class Solver
 
                 Console.WriteLine("**Stage**");
                 // Process solutions
+                HashSet<int> solutionCop = new(solutionBag.Count);
                 foreach (Solution solution in solutionBag)
                 {
+                    if (!solutionCop.Add(solution.Cell))
+                    {
+                        continue;
+                    }
+
                     if (puzzle.Update(solution))
                     {
                         newSolutions++;
                         Cell cell = solution.Cell;
                         Console.WriteLine($"{cell.Row},{cell.Column}: {solution.Value}; {solution.Solver}");
+                    }
+                    else
+                    {
+                        newSolutions++;
+                        Cell cell = solution.Cell;
+                        Console.Write($"{cell.Row},{cell.Column}; Removed: ");
+
+                        foreach(var c in solution.Removed)
+                        {
+                            Console.Write($"{c}, ");
+                        }
+
+                        Console.WriteLine($"; {solution.Solver}");
                     }
                 }
 
@@ -63,8 +89,7 @@ public static class Solver
 
                 solutionsFound |= newSolutions > 0;
                 puzzle.UpdateCandidates();
-
-                playlist.Add(solvedCellsSolver);
+                break;
             }
         }
 
