@@ -18,6 +18,10 @@ List<string> tests =
 ];
 
 Puzzle p = new(tests[8]);
-List<ISolver> solvers = [ new NakedSinglesSolver(), new HiddenSinglesSolver(), new NakedPairsSolver()];
+List<ISolver> solvers = [
+    new NakedSinglesSolver(), 
+    new HiddenSinglesSolver(), 
+    new NakedPairsSolver(), 
+    new PointedPairsSolver()];
 
 Solver.Solve(p, solvers);

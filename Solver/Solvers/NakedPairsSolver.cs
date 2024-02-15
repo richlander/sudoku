@@ -90,16 +90,11 @@ public class NakedPairsSolver : ISolver
             List <int> removals = otherCandidates.Intersect(cellCandidates).ToList();
             if (removals.Count > 0)
             {
-                Solution s = new(puzzle.GetCell(index), -1, removals, nameof(NakedPairsSolver));
-
-                if (solution is {})
+                Solution s = new(puzzle.GetCell(index), -1, removals, nameof(NakedPairsSolver))
                 {
-                    solution.Next = s;
-                }
-                else
-                {
-                    solution = s;
-                }
+                    Next = solution
+                };
+                solution = s;
             }
         }
 
