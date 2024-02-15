@@ -10,14 +10,28 @@ public class PointedPairsSolver : ISolver
     {
         Box box = puzzle.GetBox(cell.Box);
         IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
-        IEnumerable<int> boxColumn = box.GetColumnIndices(cell.BoxColumn);
 
-        // We need to determine if there is a candidate in this column that is unique to the box column
-        if (TryFindUniqueCandidates(puzzle, boxColumn, boxLine, Puzzle.GetColumnIndices(cell.Column), out solution))
+        // We need to determine if there is a candidate in this row that is unique to the box column
+        // Only necessary for first cell in each row; answer will repeat
+        if (cell.BoxIndex % 3 is 0)
         {
-            return true;
+            IEnumerable<int> boxRow = box.GetRowIndices(cell.BoxRow);
+            if (TryFindUniqueCandidates(puzzle, boxRow, boxLine, Puzzle.GetRowIndices(cell.Row), out solution))
+            {
+                return true;
+            }
         }
 
+        // We need to determine if there is a candidate in this column that is unique to the box column
+        // Only necessary for first/top cell in each column; answer will repeat
+        if (cell.BoxIndex < 3)
+        {
+            IEnumerable<int> boxColumn = box.GetColumnIndices(cell.BoxColumn);
+            if (TryFindUniqueCandidates(puzzle, boxColumn, boxLine, Puzzle.GetColumnIndices(cell.Column), out solution))
+            {
+                return true;
+            }
+        }
         solution = null;
         return false;
     }
@@ -59,7 +73,7 @@ public class PointedPairsSolver : ISolver
         }
 
         // Clean up searchLine
-        var SearchCells = searchLine.Where(x => !(puzzle.IsCellSolved(x) || targets.Contains(x)));
+        var SearchCells = searchLine.Where(x => !(targets.Contains(x) || puzzle.IsCellSolved(x)));
 
         // `lineCandidates` can now be removed from the rest of the `searchLine`
         foreach (int index in SearchCells)
