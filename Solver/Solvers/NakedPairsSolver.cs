@@ -9,6 +9,8 @@ public class NakedPairsSolver : ISolver
         solution = null;
         IReadOnlyList<int> candidates = puzzle.GetCellCandidates(cell);
 
+        // This solver solely targets cells with 2 or 3 candidates
+        // It then looks for matches in cells for those candidates
         if (candidates.Count > 3)
         {
             solution = null;
