@@ -73,6 +73,13 @@ public class NakedPairsSolver : ISolver
             return false;
         }
 
+        // This match will repeat in a single line with the same result
+        // We only need to do the computation once
+        if (matches.Min() < thisCell)
+        {
+            return false;
+        }
+
         matches.Add(thisCell);
 
         // can we remove these candidates from another cell

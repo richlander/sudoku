@@ -50,13 +50,8 @@ public static class Solver
 
                 Console.WriteLine("**Stage**");
                 // Process solutions
-                HashSet<int> solutionCop = new(solutionBag.Count);
                 foreach (Solution solution in solutionBag)
                 {
-                    if (!solutionCop.Add(solution.Cell))
-                    {
-                        continue;
-                    }
 
                     if (puzzle.Update(solution))
                     {

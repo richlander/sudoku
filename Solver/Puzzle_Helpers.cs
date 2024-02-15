@@ -15,6 +15,7 @@ public partial class Puzzle
         index % 9,
         BoxByIndices[index],
         BoxRowByIndices[index],
-        BoxColumnByIndices[index]
+        BoxColumnByIndices[index],
+        BoxIndices[index]
     );
 }
