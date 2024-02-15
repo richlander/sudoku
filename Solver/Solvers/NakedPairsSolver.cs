@@ -6,6 +6,7 @@ public class NakedPairsSolver : ISolver
 {
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
+        solution = null;
         IReadOnlyList<int> candidates = puzzle.GetCellCandidates(cell);
 
         if (candidates.Count > 3)
@@ -21,25 +22,24 @@ public class NakedPairsSolver : ISolver
 
         foreach (IEnumerable<int> line in lines)
         {
-            if (TryFindMatchesInLine(puzzle, candidates, line, cell, out List<int>? targets))
+            if (TryFindMatchesInLine(puzzle, candidates, line, cell, out solution))
             {
-                
-
-                solution = new(cell, -1, xxx, nameof(HiddenSinglesSolver));
                 return true;
             }
         }
+
+        return false;
     }
 
     // This is a two pass algorithm
     // Find matching cells with the same two or three candidates as this cell
     // Those candidates can be removed from all others in the line (except the match)
     // This only ever results in candidate removal, never a solution
-    private static bool TryFindMatchesInLine(Puzzle puzzle, IReadOnlyList<int> cellCandidates, IEnumerable<int> line, int thisCell, [NotNullWhen(true)] out List<int>? targets)
+    private static bool TryFindMatchesInLine(Puzzle puzzle, IReadOnlyList<int> cellCandidates, IEnumerable<int> line, int thisCell, [NotNullWhen(true)] out Solution? solution)
     {
         int count = cellCandidates.Count;
+        solution = null;
         List<int>? matches = null;
-        targets = null;
         bool found = false;
 
         // is there a match
@@ -53,7 +53,7 @@ public class NakedPairsSolver : ISolver
             IReadOnlyList<int> otherCandidates = puzzle.GetCellCandidates(index);
 
             if (otherCandidates.Count == count &&
-                cellCandidates.SetEquals(otherCandidates))
+                cellCandidates.SequenceEqual(otherCandidates))
             {
                 matches ??= new(3);
                 matches.Add(index);
@@ -83,26 +83,29 @@ public class NakedPairsSolver : ISolver
             }
 
             IReadOnlyList<int> otherCandidates = puzzle.GetCellCandidates(index);
-            
-            if (count >= otherCandidates.Count)
-            {
-                continue;
-            }
 
-            if (cellCandidates.Except(otherCandidates).Any())
+            // are any of cellCandidates in otherCandidates?
+            List <int> removals = otherCandidates.Intersect(cellCandidates).ToList();
+            if (removals.Count > 0)
             {
-                continue;
-            }
+                Solution s = new(puzzle.GetCell(index), -1, removals, nameof(NakedPairsSolver));
 
-            targets ??= new(6);
-            targets.Add(index);
+                if (solution is {})
+                {
+                    solution.Next = s;
+                }
+                else
+                {
+                    solution = s;
+                }
+            }
         }
 
-        if (targets is {})
+        if (solution is null)
         {
-            return true;
+            return false;
         }
 
-        return false;
+        return true;
     }
 }
