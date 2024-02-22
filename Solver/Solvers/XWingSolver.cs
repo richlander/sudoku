@@ -28,6 +28,10 @@ public class XWingSolver : ISolver
         The right-most and bottom-most boxes be skipped entirely
         The rectangles need to be drawn across two boxes and
         the right-most boxes will already have had a chance to participate
+
+        "lower" and "higher" are a bit confusing, as used in the following code
+        "higher" is intended to mean a higher index value, but will be spatially lower on the board
+        "right" and "left" are naturally intended to orient spatially as well
     */
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
@@ -60,10 +64,9 @@ public class XWingSolver : ISolver
         return false;
     }
 
+    // This rectangle gets drawn counterclockwise, down, right, up, and then up left again
     public bool TrySolveColumn(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out (int Value, List<int> Indices) winged)
     {
-        // "lower" and "higher" are a bit confusing
-        // "higher" is intended to mean a higher index value, but will be spatially lower
         int lowerLeftIndex = cell;
         foreach (int candidate in cellCandidates)
         {
@@ -71,10 +74,9 @@ public class XWingSolver : ISolver
             IEnumerable<int> column = Puzzle.GetColumnIndices(cell.Column).Where(x => x != lowerLeftIndex);
             if (TryFindCandidateAppearsOnce(puzzle, cell, column, candidate, out int higherLeftIndex))
             {
+                // can skip case were higher cells "look up" the column (will produce same result)
                 // If the single match is in the same box, reject
-                // can safely skip case were higher cells "look up" the column
-                if (Puzzle.BoxByIndices[higherLeftIndex] == cell.Box ||
-                    higherLeftIndex < lowerLeftIndex)
+                if (higherLeftIndex < lowerLeftIndex || Puzzle.BoxByIndices[higherLeftIndex] == cell.Box)
                 {
                     continue;
                 }
@@ -124,52 +126,67 @@ public class XWingSolver : ISolver
         return false;
     }
 
-    public bool TryFindLineLockedCandidates(Puzzle puzzle, Cell cell, IEnumerable<int> line, [NotNullWhen(true)] out Dictionary<int, List<int>>? lockCandidates)
+    // This rectangle gets drawn clockwise, right, down, left, and then up again
+    public bool TrySolveRow(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out (int Value, List<int> Indices) winged)
     {
-        // Candidates for cell
-        IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
-        // open cells to check
-        IEnumerable<int> effectiveLine = line.Where(x => !(puzzle.IsCellSolved(x) || x == cell));
-        HashSet<int> lockedLine = new(effectiveLine);
-        lockCandidates = null;
-
-        if (lockedLine.Count is 0)
+        int lowerLeftIndex = cell;
+        foreach (int candidate in cellCandidates)
         {
-            return false;
-        }
-
-        // Determine which cells these candidates match
-        Dictionary<int, List<int>> matchbook = new(cellCandidates.Count);     
-        foreach(int index in lockedLine)
-        {
-            IEnumerable<int> candidates = puzzle.GetCellCandidates(index);
-            IEnumerable<int> matchingCandidates = candidates.Intersect(cellCandidates);
-
-            foreach (int match in matchingCandidates)
+            // Find cells in row (in other boxes) with the same candidates; we want just one
+            IEnumerable<int> row = Puzzle.GetRowIndices(cell.Row).Where(x => x != lowerLeftIndex);
+            if (TryFindCandidateAppearsOnce(puzzle, cell, row, candidate, out int lowerRightIndex))
             {
-                if (matchbook.TryGetValue(match, out List<int>? value))
+                // can skip case were higher cells "look left" across the row (will produce same result)
+                // If the single match is in the same box, reject
+                if (lowerRightIndex < lowerLeftIndex || Puzzle.BoxByIndices[lowerRightIndex] == cell.Box)
                 {
-                    value.Add(index);
+                    continue;
                 }
-                else
+
+                // Find cells in right-er column (in other boxes) with the same candidates
+                Cell lowerRightCell = puzzle.GetCell(lowerRightIndex);
+                IEnumerable<int> rightColumn = Puzzle.GetColumnIndices(lowerRightCell.Column).Where(x => Puzzle.BoxByIndices[x] != lowerRightCell.Box && puzzle.GetCellCandidates(x).Contains(candidate));
+                // Determine if any of those columns are locked for the same candididate
+                foreach (int higherRightIndex in rightColumn)
                 {
-                    matchbook.Add(match, new List<int>(9){index});
+                    // only need to try this test once per column
+                    if (higherRightIndex < lowerRightIndex)
+                    {
+                        continue;
+                    }
+
+                    Cell higherRightCell = puzzle.GetCell(higherRightIndex);
+                    // If row is locked, check if columns match
+                    // Find cells in row (in other boxes) with the same candidates; we want just one
+                    IEnumerable<int> higherRow = Puzzle.GetRowIndices(higherRightCell.Row).Where(x => x != higherRightIndex);
+                    if (TryFindCandidateAppearsOnce(puzzle, higherRightCell, higherRow, candidate, out int higherLeftIndex))
+                    {
+   
+                        // Test of X-Wing
+                        if (Puzzle.ColumnByIndices[lowerLeftIndex] == Puzzle.ColumnByIndices[higherLeftIndex])
+                        {
+                            // Still have to find candidates to remove
+                            IEnumerable<int> leftColumnCandidates = Puzzle.GetColumnIndices(cell.Column).Where(x => x != lowerLeftIndex && x != lowerRightIndex && puzzle.GetCellCandidates(x).Contains(candidate));
+                            IEnumerable<int> rightColumnCandidates = Puzzle.GetColumnIndices(higherRightCell.Column).Where(x => x != lowerRightIndex && x != higherRightIndex && puzzle.GetCellCandidates(x).Contains(candidate));
+
+                            List<int> finalList = [];
+                            finalList.AddRange(leftColumnCandidates);
+                            finalList.AddRange(rightColumnCandidates);
+
+                            if (finalList.Count > 0)
+                            {
+                                winged = (candidate, finalList);
+                                return true;
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        // Determine where there is one other cell the candidate appears
-        List<int> matches = matchbook.Keys.Where(k => matchbook[k].Count is 1).ToList();
-
-        if (matches.Count is 0)
-        {
-            return false;
-        }
-
-        lockCandidates = matchbook;
-        return true;
+        winged = default;
+        return false;
     }
-
     public bool TryFindCandidateAppearsOnce(Puzzle puzzle, Cell cell, IEnumerable<int> line, int uniqueValue, out int uniqueIndex)
     {
         uniqueIndex = -1;
