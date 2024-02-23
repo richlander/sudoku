@@ -8,7 +8,7 @@ namespace Sudoku;
 public static class Solver
 {
 
-    public static void Solve(Puzzle puzzle, List<ISolver> solvers)
+    public static bool Solve(Puzzle puzzle, List<ISolver> solvers)
     {
         int solutions = 0;
         bool solutionsFound = true;
@@ -78,8 +78,7 @@ public static class Solver
                 
                 if (puzzle.IsSolved)
                 {
-                    Console.WriteLine($"Puzzle is solved!");
-                    return;    
+                    break;    
                 }
 
                 solutionsFound |= newSolutions > 0;
@@ -87,9 +86,12 @@ public static class Solver
                 break;
             }
         }
-
-        Console.WriteLine($"Final puzzle with {solutions} solutions applied");
+        bool solved = puzzle.IsSolved;
+        bool valid = solved || puzzle.IsValid;
+        Console.WriteLine($"Solutions applied: {solutions}; Complete: {solved}; Valid: {valid}");
         Console.WriteLine(puzzle.ToString());
+
+        return solved;
     }
 
     public static bool TrySolveCell(Puzzle puzzle, ISolver solver, int index, [NotNullWhen(true)] out Solution? solution)

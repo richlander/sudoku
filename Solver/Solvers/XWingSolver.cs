@@ -42,7 +42,8 @@ public class XWingSolver : ISolver
         }
 
         IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
-        if (TrySolveColumn(puzzle, cell, cellCandidates, out (int Value, List<int> Indices) winged))
+        if (TrySolveColumn(puzzle, cell, cellCandidates, out (int Value, List<int> Indices) winged) ||
+            TrySolveRow(puzzle, cell, cellCandidates, out winged))
         {
             foreach (int index in winged.Indices)
             {
@@ -72,7 +73,7 @@ public class XWingSolver : ISolver
         {
             // Find cells in column (in other boxes) with the same candidates; we want just one
             IEnumerable<int> column = Puzzle.GetColumnIndices(cell.Column).Where(x => x != lowerLeftIndex);
-            if (TryFindCandidateAppearsOnce(puzzle, cell, column, candidate, out int higherLeftIndex))
+            if (puzzle.TryFindValueAppearsOnce(cell, column, candidate, out int higherLeftIndex))
             {
                 // can skip case were higher cells "look up" the column (will produce same result)
                 // If the single match is in the same box, reject
@@ -97,7 +98,7 @@ public class XWingSolver : ISolver
                     // If column is locked, check if rows match
                     // Find cells in column (in other boxes) with the same candidates; we want just one
                     IEnumerable<int> higherColumn = Puzzle.GetColumnIndices(higherRightCell.Column).Where(x => x != higherRightCell);
-                    if (TryFindCandidateAppearsOnce(puzzle, higherRightCell, higherColumn, candidate, out int lowerRightIndex))
+                    if (puzzle.TryFindValueAppearsOnce(higherRightCell, higherColumn, candidate, out int lowerRightIndex))
                     {
    
                         // Test of X-Wing
@@ -134,7 +135,7 @@ public class XWingSolver : ISolver
         {
             // Find cells in row (in other boxes) with the same candidates; we want just one
             IEnumerable<int> row = Puzzle.GetRowIndices(cell.Row).Where(x => x != lowerLeftIndex);
-            if (TryFindCandidateAppearsOnce(puzzle, cell, row, candidate, out int lowerRightIndex))
+            if (puzzle.TryFindValueAppearsOnce(cell, row, candidate, out int lowerRightIndex))
             {
                 // can skip case were higher cells "look left" across the row (will produce same result)
                 // If the single match is in the same box, reject
@@ -159,7 +160,7 @@ public class XWingSolver : ISolver
                     // If row is locked, check if columns match
                     // Find cells in row (in other boxes) with the same candidates; we want just one
                     IEnumerable<int> higherRow = Puzzle.GetRowIndices(higherRightCell.Row).Where(x => x != higherRightIndex);
-                    if (TryFindCandidateAppearsOnce(puzzle, higherRightCell, higherRow, candidate, out int higherLeftIndex))
+                    if (puzzle.TryFindValueAppearsOnce(higherRightCell, higherRow, candidate, out int higherLeftIndex))
                     {
    
                         // Test of X-Wing
@@ -186,33 +187,5 @@ public class XWingSolver : ISolver
 
         winged = default;
         return false;
-    }
-    public bool TryFindCandidateAppearsOnce(Puzzle puzzle, Cell cell, IEnumerable<int> line, int uniqueValue, out int uniqueIndex)
-    {
-        uniqueIndex = -1;
-        int match = -1;
-        foreach (int index in line)
-        {
-            IEnumerable<int> candidates = puzzle.GetCellCandidates(index);
-            if (!candidates.Contains(uniqueValue))
-            {
-                continue;
-            }
-            
-            if (match > -1)
-            {
-                return false;
-            }
-
-            match = index;
-        }
-
-        if (match is 0)
-        {
-            return false;
-        }
-
-        uniqueIndex = match;
-        return true;
     }
 }

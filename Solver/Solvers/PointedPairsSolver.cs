@@ -8,6 +8,7 @@ public class PointedPairsSolver : ISolver
 {
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
+        solution = null;
         Box box = puzzle.GetBox(cell.Box);
         IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
 
@@ -16,9 +17,9 @@ public class PointedPairsSolver : ISolver
         if (cell.BoxIndex % 3 is 0)
         {
             IEnumerable<int> boxRow = box.GetRowIndices(cell.BoxRow);
-            if (TryFindUniqueCandidates(puzzle, boxRow, boxLine, Puzzle.GetRowIndices(cell.Row), out solution))
+            if (TryFindUniqueCandidates(puzzle, boxRow, boxLine, Puzzle.GetRowIndices(cell.Row), out Solution? s))
             {
-                return true;
+                solution = s;
             }
         }
 
@@ -27,62 +28,69 @@ public class PointedPairsSolver : ISolver
         if (cell.BoxIndex < 3)
         {
             IEnumerable<int> boxColumn = box.GetColumnIndices(cell.BoxColumn);
-            if (TryFindUniqueCandidates(puzzle, boxColumn, boxLine, Puzzle.GetColumnIndices(cell.Column), out solution))
+            if (TryFindUniqueCandidates(puzzle, boxColumn, boxLine, Puzzle.GetColumnIndices(cell.Column), out Solution? s))
             {
-                return true;
-            }
-        }
-        solution = null;
-        return false;
-    }
-
-    public bool TryFindUniqueCandidates(Puzzle puzzle, IEnumerable<int> targetLine, IEnumerable<int> testLine, IEnumerable<int> searchLine, [NotNullWhen(true)] out Solution? solution)
-    {
-        solution = null;
-        HashSet<int> targets = new HashSet<int>(targetLine);
-        HashSet<int> lineCandidates = new(9);
-        
-        // Unify the list of candidates
-        // Doesn't matter if a candidate shows up in one or alls
-        foreach(int index in targets)
-        {
-            IEnumerable<int> candidates = puzzle.GetCellCandidates(index);
-            lineCandidates.AddRange(candidates);
-        }
-
-        // Clone lineCandidates
-        HashSet<int> lineCandidatesSlim = new(lineCandidates);
-        // Clean up testLine
-        var testCells = testLine.Where(x => !(puzzle.IsCellSolved(x) || targets.Contains(x)));
-
-        // Start removing candidates, per `testLine`
-        foreach (int index in testCells)
-        {
-            IEnumerable<int> candidates = puzzle.GetCellCandidates(index);
-            lineCandidatesSlim.RemoveRange(candidates);
-
-            if (lineCandidatesSlim.Count is 0)
-            {
-                break;
+                if (solution is null)
+                {
+                    solution = s;
+                }
+                else
+                {
+                    Puzzle.AttachToLastSolution(solution, s);
+                }
             }
         }
 
-        if (lineCandidatesSlim.Count is 0)
+        if (solution is null)
         {
             return false;
         }
 
-        // Clean up searchLine
-        var SearchCells = searchLine.Where(x => !(targets.Contains(x) || puzzle.IsCellSolved(x)));
+        return true;
+    }
 
-        // `lineCandidates` can now be removed from the rest of the `searchLine`
-        foreach (int index in SearchCells)
+    public bool TryFindUniqueCandidates(Puzzle puzzle, IEnumerable<int> targetLine, IEnumerable<int> homeLine, IEnumerable<int> searchLine, [NotNullWhen(true)] out Solution? solution)
+    {
+        solution = null;
+        HashSet<int> targets = new(targetLine);
+        HashSet<int> targetCandidates = new(9);
+        
+        // Unify the list of candidates
+        // Doesn't matter if a candidate shows up in one or all cells
+        foreach(int index in targets)
         {
             IEnumerable<int> candidates = puzzle.GetCellCandidates(index);
-            List<int> removalCandidates = candidates.Intersect(lineCandidatesSlim).ToList();
+            targetCandidates.AddRange(candidates);
+        }
 
-            if (removalCandidates.Count > 0)
+        // Filter homeLine
+        IEnumerable<int> homeLineFiltered = homeLine.Where(x => !(puzzle.IsCellSolved(x) || targets.Contains(x)));
+
+        // Start removing candidates, from homeLine
+        foreach (int index in homeLineFiltered)
+        {
+            IEnumerable<int> candidates = puzzle.GetCellCandidates(index);
+            targetCandidates.RemoveRange(candidates);
+
+            if (targetCandidates.Count is 0)
             {
+                // There is no unique candidate
+                return false;
+            }
+        }
+
+        // We now know that the candidate is unique to targetLine within the homeLine unit
+        // Filter searchLine
+        IEnumerable<int> searchLineFiltered = searchLine.Where(x => !(targets.Contains(x) || puzzle.IsCellSolved(x)));
+
+        // targetCandidates can now be removed from the rest of the `searchLine`
+        foreach (int index in searchLineFiltered)
+        {
+            IEnumerable<int> candidates = puzzle.GetCellCandidates(index);
+
+            if (candidates.Intersect(targetCandidates).Any())
+            {
+                List<int> removalCandidates = candidates.Intersect(targetCandidates).ToList();
                 Solution s = new(puzzle.GetCell(index), -1, removalCandidates, nameof(PointedPairsSolver))
                 {
                     Next = solution

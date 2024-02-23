@@ -41,13 +41,6 @@ public partial class Puzzle
         }
     }
 
-    public IEnumerable<IEnumerable<int>> GetCellValues(List<IEnumerable<int>> lines)
-    {
-        foreach(IEnumerable<int> line in lines)
-        {
-            yield return GetCellValues(line);
-        }
-    }
     public IEnumerable<int> GetBoxValues(int index) => GetCellValues(GetBoxIndices(index));
 
     public IEnumerable<int> GetColumnValues(int index) => GetCellValues(GetColumnIndices(index));
@@ -99,12 +92,14 @@ public partial class Puzzle
     // Solution data  
     public int SolvedCells {get; private set; }
     
-    public bool IsSolved => SolvedCells is 81 && IsValid();
+    public bool IsSolved => SolvedCells is 81 && IsValid;
 
     public bool IsCellSolved(int index) => _board[index] is not 0;
 
     // Validation
-    public bool IsValid()
+    public bool IsValid => FindAnyDuplicateCells();
+
+    private bool FindAnyDuplicateCells()
     {
         foreach (var _ in FindDuplicatesCells())
         {
@@ -142,7 +137,11 @@ public partial class Puzzle
         foreach (var index in line)
         {
             int value = GetValue(index);
-            if (!values.Add(value))
+            if (value is 0)
+            {
+                continue;
+            }
+            else if (!values.Add(value))
             {
                 yield return index;
             }
@@ -160,7 +159,9 @@ public partial class Puzzle
         {
             // Initialize board
             char c = puzzle[i];
-            _board[i] = c is '.' ? 0 : c - '0';
+            int value = c is '.' ? 0 : c - '0';
+            _board[i] = value;
+            SolvedCells += value > 0 ? 1 : 0;
         }
 
         // Things that are cell-specific
@@ -186,7 +187,7 @@ public partial class Puzzle
         for (int i = 0; i < 9; i++)
         {
             _boxes[i] = new Box(i);
-            SolvedCells = GetRowValues(i).Count(x => x > 0);
+            // SolvedCells = GetRowValues(i).Count(x => x > 0);
         }
     }
 

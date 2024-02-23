@@ -1,29 +1,67 @@
 ﻿using Sudoku;
 
-List<string> tests = 
-[
-    "994236158638591742125487936316754289742918563589362417867125394253649871491873625",
-    "974236158638591742125487936316754289742918563589362417867125394253649871491873625",
-    ".564891733746159829817234565932748617128.6549468591327635147298127958634849362715",
-    "3.542.81.4879.15.6.29.5637485.793.416132   .8957.74.6528.2413.9.655.867.192.965124.8",
-    "..5.9.1841.85742.6...812.57..4.51.6251246.87.6..28.541...12.4....1.3872.32..4.61.",
-    "..2.3...8.....8....31.2.....6..5.27..1.....5.2.4.6..31....8.6.5.......13..531.4..",
-    "..2.3.1.8...1.83..831.2.5..36..51274.1.243.56254.6..311.3.8.6.5.......13..531.4..",
-    ".94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8",
-    "7.5.2...1...5..3...31..9.82.5...6...69.....75...2...3.51.8..49...3..1...8...3.1.6",
-    "100000569402000008050009040000640801000010000208035000040500010900000402621000005",
-    "6...1.5.2...639....8........3....7..8..2.1..4..1....9........5....387...4.8.9...6",
-    "3...8...1.6..2..9...5.9.7.....479.......1.....296.548..3.....6..5.....1..1426357.",
-    "..7.3..96..41...5.3....5.......789........1......6.3.46.2..4.....1..7...5.....8..",
-    "..2.3...8.....8....31.2.....6..5.27..1.....5.2.4.6..31....8.6.5.......13..531.4.."
-];
+if (args.Length is 0)
+{
+    Console.WriteLine("Provide a puzzle or puzzle file as input.");
+    return;
+}
 
-Puzzle p = new(tests[8]);
 List<ISolver> solvers = [
-    new NakedSinglesSolver(), 
     new HiddenSinglesSolver(), 
     new NakedPairsSolver(), 
     new PointedPairsSolver(),
     new XWingSolver()];
 
-Solver.Solve(p, solvers);
+string puzzle = args[0];
+if (File.Exists(puzzle))
+{
+    int solutions = 0;
+    int count = 1;
+    foreach (string line in File.ReadLines(puzzle))
+    {
+        if (line.Length is 0)
+        {
+            continue;
+        }
+        else if (line.Length != 81)
+        {
+            Console.WriteLine(line);
+            Console.WriteLine($"Invalid (length: {line.Length}): {count}");
+            return;
+        }
+
+        Console.WriteLine($"{count}: {line}");
+
+        Puzzle p = new(line);
+        bool solved = Solver.Solve(p, solvers);
+
+        if (solved)
+        {
+            solutions++;
+        }
+        else if (!p.IsValid)
+        {
+            Console.WriteLine($"Invalid: {count}");
+            Console.WriteLine($"Input: {line}");
+            Console.WriteLine($"Final: {p}");
+            return;
+        }
+        else
+        {
+            Console.WriteLine($"Failed: {count}; {line}");
+        }
+        count++;
+    }
+
+    Console.WriteLine($"Count: {count}; Solutions: {solutions}");
+}
+else if (puzzle.Length is 81)
+{
+    Puzzle p = new(puzzle);
+    Solver.Solve(p, solvers);  
+}
+else
+{
+    Console.WriteLine("Puzzle is invalid");
+    return;
+}
