@@ -23,7 +23,7 @@ public class NakedPairsSolver : ISolver
 
         foreach (IEnumerable<int> line in lines)
         {
-            if (puzzle.TryFindCellCandidatesAppearOnce(cell, line, out int uniqueIndex))
+            if (puzzle.TryFindCellCandidatePairsAppearOnce(cell, line, out int uniqueIndex))
             {
                 foreach (int index in line.Where(x => !(puzzle.IsCellSolved(x) || x == cell || x == uniqueIndex)))
                 {

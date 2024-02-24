@@ -11,6 +11,7 @@ List<ISolver> solvers = [
     new NakedPairsSolver(), 
     new HiddenPairsSolver(),
     new PointedPairsSolver(),
+    new BoxLineReductionSolver(),
     new XWingSolver()];
 
 string puzzle = args[0];

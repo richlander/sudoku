@@ -1,23 +1,22 @@
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Channels;
 
 namespace Sudoku;
 
-public class PointedPairsSolver : ISolver
+// Almost identical to pointed pairs, with a sort of 90° translated mirror of the algorithm
+public class BoxLineReductionSolver : ISolver
 {
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
         solution = null;
         Box box = puzzle.GetBox(cell.Box);
-        IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
 
         // We need to determine if there is a candidate in this row that is unique to the box column
         // Only necessary for first cell in each row; answer will repeat
         if (puzzle.IsIndexFirstUnsolved(box.GetRowIndices(cell.BoxRow), cell))
         {
+            IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
             IEnumerable<int> boxRow = box.GetRowIndices(cell.BoxRow);
-            if (puzzle.TryFindUniqueCandidates(boxRow, boxLine, Puzzle.GetRowIndices(cell.Row), nameof(PointedPairsSolver), out Solution? s))
+            if (puzzle.TryFindUniqueCandidates(boxRow, Puzzle.GetRowIndices(cell.Row), boxLine, nameof(BoxLineReductionSolver), out Solution? s))
             {
                 solution = s;
             }
@@ -27,8 +26,9 @@ public class PointedPairsSolver : ISolver
         // Only necessary for first/top cell in each column; answer will repeat
         if (puzzle.IsIndexFirstUnsolved(box.GetColumnIndices(cell.BoxColumn), cell))
         {
+            IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
             IEnumerable<int> boxColumn = box.GetColumnIndices(cell.BoxColumn);
-            if (puzzle.TryFindUniqueCandidates(boxColumn, boxLine, Puzzle.GetColumnIndices(cell.Column), nameof(PointedPairsSolver), out Solution? s))
+            if (puzzle.TryFindUniqueCandidates(boxColumn, Puzzle.GetColumnIndices(cell.Column), boxLine, nameof(BoxLineReductionSolver), out Solution? s))
             {
                 if (solution is null)
                 {
