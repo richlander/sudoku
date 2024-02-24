@@ -9,6 +9,7 @@ if (args.Length is 0)
 List<ISolver> solvers = [
     new HiddenSinglesSolver(), 
     new NakedPairsSolver(), 
+    new HiddenPairsSolver(),
     new PointedPairsSolver(),
     new XWingSolver()];
 
