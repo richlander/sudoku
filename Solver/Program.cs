@@ -1,8 +1,9 @@
 ﻿using Sudoku;
+using static System.Console;
 
 if (args.Length is 0)
 {
-    Console.WriteLine("Provide a puzzle or puzzle file as input.");
+    WriteLine("Provide a puzzle or puzzle file as input.");
     return;
 }
 
@@ -14,56 +15,52 @@ List<ISolver> solvers = [
     new BoxLineReductionSolver(),
     new XWingSolver()];
 
-string puzzle = args[0];
-if (File.Exists(puzzle))
+bool solveQuietly = false;
+
+string input = args[0];
+if (File.Exists(input))
 {
     int solutions = 0;
     int count = 1;
-    foreach (string line in File.ReadLines(puzzle))
+    foreach (string line in File.ReadLines(input))
     {
         if (line.Length is 0)
         {
             continue;
         }
-        else if (line.Length != 81)
-        {
-            Console.WriteLine(line);
-            Console.WriteLine($"Invalid (length: {line.Length}): {count}");
-            return;
-        }
 
-        Console.WriteLine($"{count}: {line}");
-
-        Puzzle p = new(line);
-        bool solved = Solver.Solve(p, solvers);
-
-        if (solved)
-        {
-            solutions++;
-        }
-        else if (!p.IsValid)
-        {
-            Console.WriteLine($"Invalid: {count}");
-            Console.WriteLine($"Input: {line}");
-            Console.WriteLine($"Final: {p}");
-            return;
-        }
-        else
-        {
-            Console.WriteLine($"Failed: {count}; {line}");
-        }
+        WriteLine($"{count}: {line}");
         count++;
+
+        SolvePuzzle(line, solvers);
     }
 
-    Console.WriteLine($"Count: {count}; Solutions: {solutions}");
+    WriteLine($"Count: {count}; Solutions: {solutions}");
 }
-else if (puzzle.Length is 81)
+else if (input.Length is 81)
 {
-    Puzzle p = new(puzzle);
-    Solver.Solve(p, solvers);  
+    SolvePuzzle(input, solvers);
 }
-else
+
+void SolvePuzzle(string board, IReadOnlyList<ISolver> solvers)
 {
-    Console.WriteLine("Puzzle is invalid");
-    return;
+    if (board.Length != 81)
+    {
+        WriteLine("Puzzle string is invalid");
+    }
+
+    Puzzle puzzle = new(board);
+    if (solveQuietly)
+    {
+        ConsoleSolver.SolveQuietly(puzzle, solvers);
+        if (!puzzle.IsValid)
+        {
+            WriteLine("Puzzle is not valid.");
+            WriteLine(puzzle);
+        }
+    }
+    else
+    {
+        ConsoleSolver.Solve(puzzle, solvers);
+    }
 }

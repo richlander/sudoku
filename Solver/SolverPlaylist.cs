@@ -1,14 +1,9 @@
 namespace Sudoku;
 
-public class SolverPlaylist
+public class SolverPlaylist(IReadOnlyList<ISolver> solvers)
 {
-    private readonly List<ISolver> _solvers;
+    private readonly IReadOnlyList<ISolver> _solvers = solvers;
     private readonly Stack<ISolver> _priorityList = new(1);
-
-    public SolverPlaylist(List<ISolver> solvers)
-    {
-        _solvers = solvers;
-    }
 
     public IEnumerable<ISolver> Play()
     {

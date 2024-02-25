@@ -14,7 +14,6 @@ public partial class Puzzle
     private readonly Box[] _boxes = new Box[9];
     private readonly Cell[] _cells = new Cell[81];
     private readonly List<int>[] _candidates = new List<int>[81];
-    private readonly List<int> _emptyList = [];
     
     public Puzzle(string puzzle)
     {
@@ -179,7 +178,7 @@ public partial class Puzzle
             }
             else
             {
-                _candidates[i] = _emptyList;
+                _candidates[i] = [];
             }
         }
 
@@ -214,10 +213,20 @@ public partial class Puzzle
 
         _board[index] = solution.Value;
         SolvedCells++;
-        _candidates[index] = _emptyList;
+        _candidates[index] = [];
 
-        // `true` indicators that a new board value was found
+        // `true` indicates that a new board value was found
         return true;
+    }
+
+    public void UpdateAndUnwrapSolutions(Solution solution)
+    {
+        Solution? sol = solution;
+        while (sol is not null)
+        {
+            Update(sol);
+            sol = sol.Next;
+        }
     }
 
     public void UpdateCandidates()
