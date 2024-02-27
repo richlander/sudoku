@@ -6,7 +6,7 @@ namespace Sudoku;
 
 public class HiddenSinglesSolver : ISolver
 {
-    // Hidden singles: One logically absent value in a box, row or column
+    // Hidden singles: One value logically absent candidate value in a box, row or column
     // Determine which candidates are unique in the given cell per each unit (box, column, row)
     // If there is just one candidate, then that's the solution
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
@@ -28,11 +28,11 @@ public class HiddenSinglesSolver : ISolver
             }
 
             // Count may be 0, 1, or another value
-            // A solution may only be present with "1"
+            // A solution is present with a single value
             if (cellCandidates.Count is 1)
             {
                 int value = cellCandidates.Single();
-                solution = new(cell, value, cellCandidates, nameof(HiddenSinglesSolver));
+                solution = new(cell, value, [], nameof(HiddenSinglesSolver));
                 return true;
             }
         }

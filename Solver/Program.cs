@@ -15,8 +15,6 @@ List<ISolver> solvers = [
     new BoxLineReductionSolver(),
     new XWingSolver()];
 
-bool solveQuietly = false;
-
 string input = args[0];
 if (File.Exists(input))
 {
@@ -29,38 +27,37 @@ if (File.Exists(input))
             continue;
         }
 
-        WriteLine($"{count}: {line}");
-        count++;
+        Puzzle puzzle = new(line);
+        ConsoleSolver.SolveQuietly(puzzle, solvers);
 
-        SolvePuzzle(line, solvers);
+        bool solved = puzzle.IsSolved;
+        bool valid = solved || puzzle.IsValid;
+
+        if (solved)
+        {
+            solutions++;
+        }
+        else if (valid)
+        {
+            WriteLine($"Incomplete: {count}; {line}");
+        }
+        else
+        {
+            WriteLine($"Invalid: {count}; {line}");
+        }
+
+        count++;
     }
 
+    WriteLine();
     WriteLine($"Count: {count}; Solutions: {solutions}");
 }
 else if (input.Length is 81)
 {
-    SolvePuzzle(input, solvers);
+    Puzzle puzzle = new(input);
+    ConsoleSolver.Solve(puzzle, solvers, false);
 }
-
-void SolvePuzzle(string board, IReadOnlyList<ISolver> solvers)
+else
 {
-    if (board.Length != 81)
-    {
-        WriteLine("Puzzle string is invalid");
-    }
-
-    Puzzle puzzle = new(board);
-    if (solveQuietly)
-    {
-        ConsoleSolver.SolveQuietly(puzzle, solvers);
-        if (!puzzle.IsValid)
-        {
-            WriteLine("Puzzle is not valid.");
-            WriteLine(puzzle);
-        }
-    }
-    else
-    {
-        ConsoleSolver.Solve(puzzle, solvers);
-    }
+    WriteLine("Puzzle string is invalid");
 }

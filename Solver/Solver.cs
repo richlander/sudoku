@@ -7,16 +7,15 @@ namespace Sudoku;
 
 public static class Solver
 {
-
     public static IEnumerable<Solution> Solve(Puzzle puzzle, IReadOnlyList<ISolver> solvers)
     {
-        bool solutionsFound = true;
         SolvedCellsSolver solvedCellsSolver = new();
         SolverPlaylist playlist = new(solvers);
+        Solution? solutions = null;
 
-        while (solutionsFound)
+        do
         {
-            solutionsFound = false;
+            solutions = null;
             playlist.Add(solvedCellsSolver);
 
             foreach(ISolver solver in playlist.Play())
@@ -26,22 +25,22 @@ public static class Solver
                 {
                     if (TrySolveCell(puzzle, solver, i, out Solution? solution))
                     {
-                        yield return solution;
-                        solutionsFound = true;
+                        solutions = Puzzle.AttachFirstAndLastSolution(solutions, solution);
                         if (puzzle.IsSolved)
                         {
                             break;    
                         }
                     }
                 }
-            
+
                 // Need to run SolverCellsSolver next
-                if (solutionsFound)
+                if (solutions is not null)
                 {
+                    yield return solutions;
                     break;
                 }
             }
-        }
+        } while (solutions is not null);
     }
 
     public static bool TrySolveCell(Puzzle puzzle, ISolver solver, int index, [NotNullWhen(true)] out Solution? solution)

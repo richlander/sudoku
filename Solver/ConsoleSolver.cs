@@ -3,66 +3,67 @@ using static System.Console;
 
 public static class ConsoleSolver
 {
-    public static bool Solve(Puzzle puzzle, IReadOnlyList<ISolver> solvers, bool drawSolution = true)
+    public static void Solve(Puzzle puzzle, IReadOnlyList<ISolver> solvers, bool drawSolution = true)
     {
         Counts counts = new();
         foreach (var solution in Solver.Solve(puzzle, solvers))
         {
-            PrintSolutionAndUpdate(puzzle, solution, drawSolution, ref counts);
+            PrintSolutionsAndUpdate(puzzle, solution, drawSolution, ref counts);
         }
 
         bool solved = puzzle.IsSolved;
         bool valid = solved || puzzle.IsValid;
+        WriteLine();
         WriteLine($"Solutions: {counts.TotalSolutions}; Cells solved: {counts.CellsSolved} Complete: {solved}; Valid: {valid}");
         WriteLine(puzzle);
-        return solved;
     }
 
     public static void SolveQuietly(Puzzle puzzle, IReadOnlyList<ISolver> solvers)
     {
         foreach (var solution in Solver.Solve(puzzle, solvers))
         {
-            puzzle.UpdateAndUnwrapSolutions(solution);
+            puzzle.UpdateBoard(solution);
         }
     }
 
-    private static Counts PrintSolutionAndUpdate(Puzzle puzzle, Solution solution, bool drawSolution, ref Counts counts)
+    private static Counts PrintSolutionsAndUpdate(Puzzle puzzle, Solution solution, bool drawSolution, ref Counts counts)
     {
         WriteLine();
-        WriteLine($"****Batch -- {CountSolutions(solution)} solution(s)**");
+        WriteLine($"**** {solution.Solver} -- {CountSolutions(solution)} solution(s)**");
         WriteLine();
-        Solution? sol = solution;
+        Solution? nextSolution = solution;
         // Process solutions
-        while (sol is not null)
+        while (nextSolution is not null)
         {
-            if (puzzle.Update(sol))
+            if (puzzle.UpdateCell(nextSolution))
             {
                 counts.CellsSolved++;
-                Cell cell = sol.Cell;
+                Cell cell = nextSolution.Cell;
                 if (drawSolution)
                 {
-                    DrawSolution(puzzle, sol);
+                    DrawSolution(puzzle, nextSolution);
                 }
-                WriteLine($"Solution; {cell.Row},{cell.Column} ({cell.Index}); {sol.Value}; {sol.Solver}");
+                WriteLine($"{cell.Row},{cell.Column} ({cell.Index, 2}); {nextSolution.Value}");
             }
             else
             {
-                Cell cell = sol.Cell;
-                Write($"Removals; {cell.Row},{cell.Column} ({cell.Index}); ");
+                Cell cell = nextSolution.Cell;
+                Write($"{cell.Row},{cell.Column} ({cell.Index, 2}); ");
                 string demark = "";
-                foreach(var c in sol.Removed)
+                foreach(var c in nextSolution.Removed)
                 {
                     Write($"{demark}{c}");
                     demark = ", ";
                 }
 
-                WriteLine($"; {sol.Solver}");
+                WriteLine(" ; Removals");
             }
 
             counts.TotalSolutions++;
-            sol = sol.Next;
+            nextSolution = nextSolution.Next;
         }
 
+        puzzle.UpdateCandidates();
         return counts;
     }
 
@@ -103,7 +104,7 @@ public static class ConsoleSolver
             
             WriteLine();
         }
-        
+
         WriteLine();
 
         void PrintColumnSolution(Solution solution)

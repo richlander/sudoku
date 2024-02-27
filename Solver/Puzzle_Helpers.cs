@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 namespace Sudoku;
 public partial class Puzzle
 {
-
     // Board navigation
     public static IEnumerable<int> GetRowIndices(int index) => IndicesByRow.Skip(index * 9).Take(9);
 
@@ -19,8 +18,7 @@ public partial class Puzzle
         BoxByIndices[index],
         BoxRowByIndices[index],
         BoxColumnByIndices[index],
-        BoxIndices[index]
-    );
+        BoxIndices[index]);
 
     // Used by solvers that want to run once per box column/row
     public bool IsIndexFirstUnsolved(IEnumerable<int> line, int index)
@@ -49,13 +47,24 @@ public partial class Puzzle
     // Solution handling
     public static void AttachToLastSolution(Solution solution, Solution nextSolution)
     {
-        Solution? s = solution;
-        while (s.Next is not null)
+        Solution? sol = solution;
+        while (sol.Next is not null)
         {
-            s = s.Next;
+            sol = sol.Next;
         }
 
-        solution.Next = nextSolution;
+        sol.Next = nextSolution;
+    }
+
+    public static Solution AttachFirstAndLastSolution(Solution? firstSolution, Solution lastSolution)
+    {
+        if (firstSolution is null)
+        {
+            return lastSolution;
+        }
+
+        AttachToLastSolution(firstSolution, lastSolution);
+        return firstSolution;
     }
 
     // Board solving
@@ -86,7 +95,7 @@ public partial class Puzzle
 
     // Finds unique index in line that contains a candidate pair (and only that pair)
     // Assumed that cell has only two candidates
-    public bool TryFindCellCandidatePairsAppearOnce(Cell cell, IEnumerable<int> line, out int uniqueIndex)
+    public bool TryFindCellCandidatePairsMatch(Cell cell, IEnumerable<int> line, out int uniqueIndex)
     {
         IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
         uniqueIndex = -1;
@@ -116,37 +125,6 @@ public partial class Puzzle
         uniqueIndex = matchIndex;
         return true;
     }
-
-    // Finds any cells in line with match of any cell candidates
-    public bool TryFindMatchingCandidates(Cell cell, IEnumerable<int> line, out Dictionary<int, List<int>>? matches)
-    {
-        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
-        // index, values
-        Dictionary<int, List<int>> uniqueValues = [];
-        foreach (int candidate in cellCandidates)
-        {
-            if (TryFindValueAppearsOnce(cell, line.Where(x => x != cell), candidate, out int uniqueIndex))
-            {
-                if (!uniqueValues.TryGetValue(uniqueIndex, out List<int>? values))
-                {
-                    values = [];
-                    uniqueValues.Add(uniqueIndex, values);
-                }
-                
-                values.Add(candidate);
-            }
-        }
-
-        if (uniqueValues.Count is 0)
-        {
-            matches = null;
-            return false;
-        }
-
-        matches = uniqueValues;
-        return true;
-    }
-
 
     public bool TryFindUniqueCandidates(IEnumerable<int> targetLine, IEnumerable<int> homeLine, IEnumerable<int> searchLine, string solver, [NotNullWhen(true)] out Solution? solution)
     {
@@ -204,5 +182,39 @@ public partial class Puzzle
         }
 
         return true;
+    }
+
+   public bool TryFindMatchingCandidates(Cell cell, IEnumerable<int> line, out (int Index, int Value1, int Value2) match)
+    {
+        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
+        // index, values
+        Dictionary<int, List<int>> uniqueValues = [];
+        // For each candidate, does it show up again and just once?
+        foreach (int candidate in cellCandidates)
+        {
+            if (TryFindValueAppearsOnce(cell, line, candidate, out int uniqueIndex))
+            {
+                if (!uniqueValues.TryGetValue(uniqueIndex, out List<int>? values))
+                {
+                    values = [];
+                    uniqueValues.Add(uniqueIndex, values);
+                }
+                
+                values.Add(candidate);
+            }
+        }
+
+        // goal is to find a an index that has two unique values (matching cell)
+        var matches = uniqueValues.Where(x => x.Value.Count is 2).ToList();
+
+        if (matches.Count is 1 && matches[0].Value.Count is 2)
+        {
+            var f = matches[0];
+            match = (f.Key, f.Value[0], f.Value[1]);
+            return true;
+        }
+
+        match = default;
+        return false;
     }
 }

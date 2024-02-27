@@ -6,9 +6,9 @@ namespace Sudoku;
 
 public class HiddenPairsSolver : ISolver
 {
-    // Hidden singles: One logically absent value in a box, row or column
-    // Determine which candidates are unique in the given cell per each unit (box, column, row)
-    // If there is just one candidate, then that's the solution
+    // Hidden pairs solver: matching candidate pairs that show up in only two cells enable removal of candidates in those same cells
+    // Targets two cells with multiple candidates, with two matching (and unique to those two cells).
+    // This is sort of the opposite of naked pairs
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
         solution = null;
@@ -19,8 +19,9 @@ public class HiddenPairsSolver : ISolver
         
         foreach (IEnumerable<int> line in lines)
         {
-            if (TryFindMatchingCandidates(puzzle, cell, line, out (int Index, int Value1, int Value2) match))
+            if (puzzle.TryFindMatchingCandidates(cell, line, out (int Index, int Value1, int Value2) match))
             {
+                // only need to do this once per unit
                 if (match.Index < cell)
                 {
                     return false;
@@ -53,38 +54,5 @@ public class HiddenPairsSolver : ISolver
         }
 
         return true;
-    }
-
-    private bool TryFindMatchingCandidates(Puzzle puzzle, Cell cell, IEnumerable<int> line, out (int Index, int Value1, int Value2) match)
-    {
-        IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
-        // index, values
-        Dictionary<int, List<int>> uniqueValues = [];
-        foreach (int candidate in cellCandidates)
-        {
-            if (puzzle.TryFindValueAppearsOnce(cell, line, candidate, out int uniqueIndex))
-            {
-                if (!uniqueValues.TryGetValue(uniqueIndex, out List<int>? values))
-                {
-                    values = [];
-                    uniqueValues.Add(uniqueIndex, values);
-                }
-                
-                values.Add(candidate);
-            }
-        }
-
-        var matches = uniqueValues.Where(x => x.Value.Count is 2).ToList();
-
-        if (matches.Count is 1 && matches[0].Value.Count is 2)
-        {
-            var f = matches[0];
-            match = (f.Key, f.Value[0], f.Value[1]);
-
-            return true;
-        }
-
-        match = default;
-        return false;
     }
 }
