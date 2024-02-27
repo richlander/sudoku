@@ -19,13 +19,15 @@ string input = args[0];
 if (File.Exists(input))
 {
     int solutions = 0;
-    int count = 1;
+    int count = 0;
     foreach (string line in File.ReadLines(input))
     {
         if (line.Length is 0)
         {
             continue;
         }
+
+        count++;
 
         Puzzle puzzle = new(line);
         ConsoleSolver.SolveQuietly(puzzle, solvers);
@@ -45,12 +47,10 @@ if (File.Exists(input))
         {
             WriteLine($"Invalid: {count}; {line}");
         }
-
-        count++;
     }
 
     WriteLine();
-    WriteLine($"Count: {count}; Solutions: {solutions}");
+    WriteLine($"Count: {count}; Solved: {solutions}");
 }
 else if (input.Length is 81)
 {

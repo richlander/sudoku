@@ -25,7 +25,7 @@ public class NakedPairsSolver : ISolver
         foreach (IEnumerable<int> line in lines)
         {
             // Which index has a matching pair to cell?
-            if (puzzle.TryFindCellCandidatePairsMatch(cell, line, out int uniqueIndex))
+            if (puzzle.TryFindCandidatePairsMatchCell(cell, line, out int uniqueIndex))
             {
                 // Remove values from other cells in line
                 foreach (int index in line.Where(x => !(puzzle.IsCellSolved(x) || x == cell || x == uniqueIndex)))

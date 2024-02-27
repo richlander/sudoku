@@ -19,7 +19,7 @@ public class HiddenPairsSolver : ISolver
         
         foreach (IEnumerable<int> line in lines)
         {
-            if (puzzle.TryFindMatchingCandidates(cell, line, out (int Index, int Value1, int Value2) match))
+            if (puzzle.TryFindMatchingCandidatePairs(cell, line, out (int Index, int Value1, int Value2) match))
             {
                 // only need to do this once per unit
                 if (match.Index < cell)
@@ -29,6 +29,8 @@ public class HiddenPairsSolver : ISolver
 
                 List<int> pairs = [match.Value1, match.Value2];
                 List<int> indices = [cell, match.Index];
+                // look at only cell and match
+                // remove all candidates but pairs
                 foreach (int index in indices)
                 {
                     IReadOnlyList<int> matchCandidates = puzzle.GetCellCandidates(index);

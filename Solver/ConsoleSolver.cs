@@ -14,7 +14,7 @@ public static class ConsoleSolver
         bool solved = puzzle.IsSolved;
         bool valid = solved || puzzle.IsValid;
         WriteLine();
-        WriteLine($"Solutions: {counts.TotalSolutions}; Cells solved: {counts.CellsSolved} Complete: {solved}; Valid: {valid}");
+        WriteLine($"Cells solved: {counts.CellsSolved}; Solutions: {counts.TotalSolutions}; Complete: {solved}; Valid: {valid}");
         WriteLine(puzzle);
     }
 

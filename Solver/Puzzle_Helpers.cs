@@ -89,34 +89,6 @@ public partial class Puzzle
             matchIndex = neighborIndex;
         }
 
-        uniqueIndex = matchIndex;
-        return true;
-    }
-
-    // Finds unique index in line that contains a candidate pair (and only that pair)
-    // Assumed that cell has only two candidates
-    public bool TryFindCellCandidatePairsMatch(Cell cell, IEnumerable<int> line, out int uniqueIndex)
-    {
-        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
-        uniqueIndex = -1;
-        int matchIndex = -1;
-        foreach (int neighborIndex in line.Where(x => x !=cell))
-        {
-            IReadOnlyList<int> neighborCandidates = GetCellCandidates(neighborIndex);
-            if (neighborCandidates.Count is not 2 || 
-                neighborCandidates.Intersect(cellCandidates).Count() is not 2)
-            {
-                continue;
-            }
-            
-            if (matchIndex > -1)
-            {
-                return false;
-            }
-
-            matchIndex = neighborIndex;
-        }
-
         if (matchIndex is -1)
         {
             return false;
@@ -184,7 +156,40 @@ public partial class Puzzle
         return true;
     }
 
-   public bool TryFindMatchingCandidates(Cell cell, IEnumerable<int> line, out (int Index, int Value1, int Value2) match)
+    // Finds unique index in line that contains a candidate pair (and only that pair)
+    // Assumed that cell has only two candidates
+    public bool TryFindCandidatePairsMatchCell(Cell cell, IEnumerable<int> line, out int uniqueIndex)
+    {
+        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
+        uniqueIndex = -1;
+        int matchIndex = -1;
+        foreach (int neighborIndex in line.Where(x => x !=cell))
+        {
+            IReadOnlyList<int> neighborCandidates = GetCellCandidates(neighborIndex);
+            if (neighborCandidates.Count is not 2 || 
+                neighborCandidates.Intersect(cellCandidates).Count() is not 2)
+            {
+                continue;
+            }
+            
+            if (matchIndex > -1)
+            {
+                return false;
+            }
+
+            matchIndex = neighborIndex;
+        }
+
+        if (matchIndex is -1)
+        {
+            return false;
+        }
+
+        uniqueIndex = matchIndex;
+        return true;
+    }
+
+   public bool TryFindMatchingCandidatePairs(Cell cell, IEnumerable<int> line, out (int Index, int Value1, int Value2) match)
     {
         IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
         // index, values
@@ -192,6 +197,7 @@ public partial class Puzzle
         // For each candidate, does it show up again and just once?
         foreach (int candidate in cellCandidates)
         {
+            // Add an entry for each value we find
             if (TryFindValueAppearsOnce(cell, line, candidate, out int uniqueIndex))
             {
                 if (!uniqueValues.TryGetValue(uniqueIndex, out List<int>? values))
