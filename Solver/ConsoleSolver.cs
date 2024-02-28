@@ -3,12 +3,18 @@ using static System.Console;
 
 public static class ConsoleSolver
 {
-    public static void Solve(Puzzle puzzle, IReadOnlyList<ISolver> solvers, bool drawSolution = true)
+    public static void Solve(Puzzle puzzle, IReadOnlyList<ISolver> solvers, bool quiet = true)
     {
         Counts counts = new();
         foreach (var solution in Solver.Solve(puzzle, solvers))
         {
-            PrintSolutionsAndUpdate(puzzle, solution, drawSolution, ref counts);
+            PrintSolutionsAndUpdate(puzzle, solution, quiet, ref counts);
+
+            if (!puzzle.IsValid)
+            {
+                WriteLine("*****Puzzle is invalid.");
+                return;
+            }
         }
 
         bool solved = puzzle.IsSolved;
@@ -18,15 +24,51 @@ public static class ConsoleSolver
         WriteLine(puzzle);
     }
 
-    public static void SolveQuietly(Puzzle puzzle, IReadOnlyList<ISolver> solvers)
+    public static void Solve(IEnumerable<string> lines, IReadOnlyList<ISolver> solvers, bool quiet = true)
     {
-        foreach (var solution in Solver.Solve(puzzle, solvers))
+
+        int solutions = 0;
+        int count = 0;
+        foreach (string line in lines)
         {
-            puzzle.UpdateBoard(solution);
+            if (line.Length is 0)
+            {
+                continue;
+            }
+
+            count++;
+
+            Puzzle puzzle = new(line);
+            foreach (var solution in Solver.Solve(puzzle, solvers))
+            {
+                puzzle.UpdateBoard(solution);
+            }
+
+            bool solved = puzzle.IsSolved;
+            bool valid = solved || puzzle.IsValid;
+
+            if (solved)
+            {
+                solutions++;
+            }
+            else if (valid)
+            {
+                if (!quiet)
+                {
+                    WriteLine($"Incomplete: {count}; {line}");
+                }
+            }
+            else
+            {
+                WriteLine($"Invalid: {count}; {line}");
+            }
         }
+
+        WriteLine();
+        WriteLine($"Count: {count}; Solved: {solutions}");
     }
 
-    private static Counts PrintSolutionsAndUpdate(Puzzle puzzle, Solution solution, bool drawSolution, ref Counts counts)
+    private static Counts PrintSolutionsAndUpdate(Puzzle puzzle, Solution solution, bool quiet, ref Counts counts)
     {
         WriteLine();
         WriteLine($"**** {solution.Solver} -- {CountSolutions(solution)} solution(s)**");
@@ -39,24 +81,49 @@ public static class ConsoleSolver
             {
                 counts.CellsSolved++;
                 Cell cell = nextSolution.Cell;
-                if (drawSolution)
+                if (!quiet)
                 {
                     DrawSolution(puzzle, nextSolution);
                 }
                 WriteLine($"{cell.Row},{cell.Column} ({cell.Index, 2}); {nextSolution.Value}");
             }
-            else
+            else if (nextSolution.RemovalCandidates is not null)
             {
                 Cell cell = nextSolution.Cell;
-                Write($"{cell.Row},{cell.Column} ({cell.Index, 2}); ");
+                Write($"{cell.Row},{cell.Column} ({cell.Index, 2})");
+                
                 string demark = "";
-                foreach(var c in nextSolution.Removed)
+                if (nextSolution.AlignedIndices is not null)
+                {
+                    Console.Write("; Aligned: ");
+                    foreach (int index in nextSolution.AlignedIndices)
+                    {
+                        Write($"{demark}{index}");
+                        demark = ", ";
+                    }
+                }
+
+                demark = "";
+                if (nextSolution.AlignedCandidates is not null)
+                {
+                    Console.Write("; Aligned Candidates: ");
+                    foreach (int index in nextSolution.AlignedCandidates)
+                    {
+                        Write($"{demark}{index}");
+                        demark = ", ";
+                    }
+                }
+
+                Write("; Removals: ");
+
+                demark = "";
+                foreach(var c in nextSolution.RemovalCandidates)
                 {
                     Write($"{demark}{c}");
                     demark = ", ";
                 }
 
-                WriteLine(" ; Removals");
+                WriteLine();
             }
 
             counts.TotalSolutions++;

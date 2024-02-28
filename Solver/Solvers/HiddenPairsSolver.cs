@@ -16,15 +16,17 @@ public class HiddenPairsSolver : ISolver
             Puzzle.GetBoxIndices(cell.Box),
             Puzzle.GetRowIndices(cell.Row),
             Puzzle.GetColumnIndices(cell.Column)];
+
+        List<int> found = [];
         
         foreach (IEnumerable<int> line in lines)
         {
             if (puzzle.TryFindMatchingCandidatePairs(cell, line, out (int Index, int Value1, int Value2) match))
             {
                 // only need to do this once per unit
-                if (match.Index < cell)
+                if (match.Index < cell || found.Contains(cell))
                 {
-                    return false;
+                    continue;
                 }
 
                 List<int> pairs = [match.Value1, match.Value2];
@@ -41,11 +43,14 @@ public class HiddenPairsSolver : ISolver
                         continue;
                     }
 
-                    Solution s = new(puzzle.GetCell(index), -1, removals, nameof(HiddenPairsSolver))
+                    found.Add(index);
+                    Solution s = new(puzzle.GetCell(index), -1, nameof(HiddenPairsSolver))
                     {
-                        Next = solution
+                        RemovalCandidates =removals,
+                        AlignedCandidates = pairs,
+                        AlignedIndices = indices,
                     };
-                    solution = s;
+                    solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
                 }
             }
         }

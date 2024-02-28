@@ -170,24 +170,26 @@ public partial class Puzzle
             throw new Exception("Something went wrong! Oops.");    
         }
 
-        if (solution.Value is -1)
+        if (solution.Value > 0)
+        {
+            _board[cell] = solution.Value;
+            SolvedCells++;
+            _candidates[cell] = [];
+
+            // `true` indicates that a new board value was found
+            // This bool is intended to avoid the need for readers to peek into `solution`
+            return true;
+        }
+        else if (solution.RemovalCandidates is not null)
         {
             List<int> candidates = _candidates[cell];
-            foreach (int value in solution.Removed)
+            foreach (int value in solution.RemovalCandidates)
             {
                 candidates.Remove(value);
             }
-
-            return false;
         }
 
-        _board[cell] = solution.Value;
-        SolvedCells++;
-        _candidates[cell] = [];
-
-        // `true` indicates that a new board value was found
-        // This bool is intended to avoid the need for readers to peek into `solution`
-        return true;
+        return false;
     }
 
     public void UpdateBoard(Solution solution)

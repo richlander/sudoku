@@ -56,14 +56,14 @@ public partial class Puzzle
         sol.Next = nextSolution;
     }
 
-    public static Solution AttachFirstAndLastSolution(Solution? firstSolution, Solution lastSolution)
+    public static Solution UpdateSolutionWithNextSolution(Solution? firstSolution, Solution nextSolution)
     {
         if (firstSolution is null)
         {
-            return lastSolution;
+            return nextSolution;
         }
 
-        AttachToLastSolution(firstSolution, lastSolution);
+        AttachToLastSolution(firstSolution, nextSolution);
         return firstSolution;
     }
 
@@ -132,6 +132,9 @@ public partial class Puzzle
         // Filter searchLine
         IEnumerable<int> searchLineFiltered = searchLine.Where(x => !(targets.Contains(x) || IsCellSolved(x)));
 
+        // target line with matching candidates
+        List<int> targetLock = targetLine.Where(x => GetCellCandidates(x).Intersect(targetCandidates).Count() == targetCandidates.Count).ToList();
+
         // targetCandidates can now be removed from the rest of the `searchLine`
         foreach (int index in searchLineFiltered)
         {
@@ -140,11 +143,13 @@ public partial class Puzzle
             if (candidates.Intersect(targetCandidates).Any())
             {
                 List<int> removalCandidates = candidates.Intersect(targetCandidates).ToList();
-                Solution s = new(GetCell(index), -1, removalCandidates, solver)
+                Solution s = new(GetCell(index), -1, solver)
                 {
-                    Next = solution
+                    RemovalCandidates = removalCandidates,
+                    AlignedCandidates = targetCandidates,
+                    AlignedIndices = targetLock,
                 };
-                solution = s;
+                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
             }
         }
 

@@ -25,7 +25,7 @@ public static class Solver
                 {
                     if (TrySolveCell(puzzle, solver, i, out Solution? solution))
                     {
-                        solutions = Puzzle.AttachFirstAndLastSolution(solutions, solution);
+                        solutions = Puzzle.UpdateSolutionWithNextSolution(solutions, solution);
                         if (puzzle.IsSolved)
                         {
                             break;    

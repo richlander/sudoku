@@ -16,7 +16,7 @@ public class BoxLineReductionSolver : ISolver
         {
             IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
             IEnumerable<int> boxRow = box.GetRowIndices(cell.BoxRow);
-            if (puzzle.TryFindUniqueCandidates(boxRow, Puzzle.GetRowIndices(cell.Row), boxLine, nameof(BoxLineReductionSolver), out Solution? s))
+            if (puzzle.TryFindUniqueCandidates(boxRow, Puzzle.GetRowIndices(cell.Row), boxLine, $"{nameof(BoxLineReductionSolver)}:Row", out Solution? s))
             {
                 solution = s;
             }
@@ -28,16 +28,9 @@ public class BoxLineReductionSolver : ISolver
         {
             IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
             IEnumerable<int> boxColumn = box.GetColumnIndices(cell.BoxColumn);
-            if (puzzle.TryFindUniqueCandidates(boxColumn, Puzzle.GetColumnIndices(cell.Column), boxLine, nameof(BoxLineReductionSolver), out Solution? s))
+            if (puzzle.TryFindUniqueCandidates(boxColumn, Puzzle.GetColumnIndices(cell.Column), boxLine, $"{nameof(BoxLineReductionSolver)}:Column", out Solution? s))
             {
-                if (solution is null)
-                {
-                    solution = s;
-                }
-                else
-                {
-                    Puzzle.AttachToLastSolution(solution, s);
-                }
+                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
             }
         }
 

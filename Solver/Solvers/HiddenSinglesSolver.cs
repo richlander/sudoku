@@ -32,7 +32,7 @@ public class HiddenSinglesSolver : ISolver
             if (cellCandidates.Count is 1)
             {
                 int value = cellCandidates.Single();
-                solution = new(cell, value, [], nameof(HiddenSinglesSolver));
+                solution = new(cell, value, nameof(HiddenSinglesSolver));
                 return true;
             }
         }

@@ -27,6 +27,11 @@ public class NakedPairsSolver : ISolver
             // Which index has a matching pair to cell?
             if (puzzle.TryFindCandidatePairsMatchCell(cell, line, out int uniqueIndex))
             {
+                if (uniqueIndex < cell)
+                {
+                    continue;
+                }
+
                 // Remove values from other cells in line
                 foreach (int index in line.Where(x => !(puzzle.IsCellSolved(x) || x == cell || x == uniqueIndex)))
                 {
@@ -35,11 +40,13 @@ public class NakedPairsSolver : ISolver
                     List<int> removals = neighborCandidates.Intersect(cellCandidates).ToList();
                     if (removals.Count > 0)
                     {
-                        Solution s = new(puzzle.GetCell(index), -1, removals, nameof(NakedPairsSolver))
+                        Solution s = new(puzzle.GetCell(index), -1, nameof(NakedPairsSolver))
                         {
-                            Next = solution
+                            RemovalCandidates = removals,
+                            AlignedCandidates = neighborCandidates,
+                            AlignedIndices = [cell, uniqueIndex],
                         };
-                        solution = s;
+                        solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
                     }
                 }
             }

@@ -9,7 +9,7 @@ public class SolvedCellsSolver : ISolver
         if (puzzle.GetCellCandidates(cell).Count is 1)
         {
             int value = puzzle.GetCellCandidates(cell).Single();
-            solution = new(cell, value, [], nameof(SolvedCellsSolver));
+            solution = new(cell, value, nameof(SolvedCellsSolver));
             return true;
         }
 

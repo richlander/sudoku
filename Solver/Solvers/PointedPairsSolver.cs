@@ -30,14 +30,7 @@ public class PointedPairsSolver : ISolver
             IEnumerable<int> boxColumn = box.GetColumnIndices(cell.BoxColumn);
             if (puzzle.TryFindUniqueCandidates(boxColumn, boxLine, Puzzle.GetColumnIndices(cell.Column), nameof(PointedPairsSolver), out Solution? s))
             {
-                if (solution is null)
-                {
-                    solution = s;
-                }
-                else
-                {
-                    Puzzle.AttachToLastSolution(solution, s);
-                }
+                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
             }
         }
 

@@ -42,32 +42,19 @@ public class XWingSolver : ISolver
         }
 
         IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
-        if (TrySolveColumn(puzzle, cell, cellCandidates, out (int Value, List<int> Indices) winged) ||
-            TrySolveRow(puzzle, cell, cellCandidates, out winged))
+        if (TrySolveColumn(puzzle, cell, cellCandidates, out solution) ||
+            TrySolveRow(puzzle, cell, cellCandidates, out solution))
         {
-            foreach (int index in winged.Indices)
-            {
-                Cell solutionCell = puzzle.GetCell(index);
-                Solution s = new(solutionCell, -1, [winged.Value], nameof(XWingSolver))
-                {
-                    Next = solution
-                };
-
-                solution = s;
-            }
-
-            if (solution is {})
-            {
-                return true;
-            }
+            return true;
         }
 
         return false;
     }
 
     // This rectangle gets drawn counterclockwise, down, right, up, and then up left again
-    public bool TrySolveColumn(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out (int Value, List<int> Indices) winged)
+    public bool TrySolveColumn(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out Solution? solution)
     {
+        solution = null;
         int lowerLeftIndex = cell;
         foreach (int candidate in cellCandidates)
         {
@@ -112,9 +99,20 @@ public class XWingSolver : ISolver
                             finalList.AddRange(lowRowCandidates);
                             finalList.AddRange(highRowCandidates);
 
-                            if (finalList.Count > 0)
+                            foreach (int index in finalList)
                             {
-                                winged = (candidate, finalList);
+                                Solution s = new(puzzle.GetCell(index), -1, $"{nameof(XWingSolver)}:Column")
+                                {
+                                    RemovalCandidates = [candidate],
+                                    AlignedCandidates = [candidate],
+                                    AlignedIndices = [lowerLeftIndex, lowerRightIndex, higherLeftIndex, higherRightIndex],
+                                };
+
+                                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                            }
+
+                            if (solution is not null)
+                            {
                                 return true;
                             }
                         }
@@ -123,13 +121,13 @@ public class XWingSolver : ISolver
             }
         }
 
-        winged = default;
         return false;
     }
 
     // This rectangle gets drawn clockwise, right, down, left, and then up again
-    public bool TrySolveRow(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out (int Value, List<int> Indices) winged)
+    public bool TrySolveRow(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out Solution? solution)
     {
+        solution = null;
         int lowerLeftIndex = cell;
         foreach (int candidate in cellCandidates)
         {
@@ -174,9 +172,20 @@ public class XWingSolver : ISolver
                             finalList.AddRange(leftColumnCandidates);
                             finalList.AddRange(rightColumnCandidates);
 
-                            if (finalList.Count > 0)
+                            foreach (int index in finalList)
                             {
-                                winged = (candidate, finalList);
+                                Solution s = new(puzzle.GetCell(index), -1, $"{nameof(XWingSolver)}:Row")
+                                {
+                                    RemovalCandidates = [candidate],
+                                    AlignedCandidates = [candidate],
+                                    AlignedIndices = [lowerLeftIndex, lowerRightIndex, higherLeftIndex, higherRightIndex],
+                                };
+
+                                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                            }
+
+                            if (solution is not null)
+                            {
                                 return true;
                             }
                         }
@@ -185,7 +194,6 @@ public class XWingSolver : ISolver
             }
         }
 
-        winged = default;
         return false;
     }
 }

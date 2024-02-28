@@ -1,6 +1,13 @@
 namespace Sudoku;
 
-public record Solution(Cell Cell, int Value, IEnumerable<int> Removed, string Solver)
+public record Solution(Cell Cell, int Value, string Solver)
 {
-    public Solution? Next {get ; set;}
+    // Candidates to remove
+    public IEnumerable<int>? RemovalCandidates { get; set; }
+
+    public IEnumerable<int>? AlignedCandidates { get; set; }
+
+    public IEnumerable<int>? AlignedIndices { get; set; }
+
+    public Solution? Next { get; set; }
 };
