@@ -37,13 +37,13 @@ public class NakedPairsSolver : ISolver
                 {
                     IReadOnlyList<int> neighborCandidates = puzzle.GetCellCandidates(index);
 
-                    List<int> removals = neighborCandidates.Intersect(cellCandidates).ToList();
-                    if (removals.Count > 0)
+                    if (neighborCandidates.Intersect(cellCandidates).Any())
                     {
+                        // List<int> removals = neighborCandidates.Except(cellCandidates).ToList();
                         Solution s = new(puzzle.GetCell(index), -1, nameof(NakedPairsSolver))
                         {
-                            RemovalCandidates = removals,
-                            AlignedCandidates = neighborCandidates,
+                            RemovalCandidates = neighborCandidates.Intersect(cellCandidates).ToList(),
+                            AlignedCandidates = cellCandidates,
                             AlignedIndices = [cell, uniqueIndex],
                         };
                         solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);

@@ -1,6 +1,10 @@
 ﻿using Sudoku;
 using static System.Console;
 
+string p = "400000938032094100095300240370609004529001673604703090957008300003900400240030709";
+
+args = [p];
+
 if (args.Length is 0)
 {
     WriteLine("Provide a puzzle or puzzle file as input.");

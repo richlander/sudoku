@@ -29,6 +29,8 @@ public class HiddenPairsSolver : ISolver
                     continue;
                 }
 
+                int uniqueIndex = match.Index;
+
                 List<int> pairs = [match.Value1, match.Value2];
                 List<int> indices = [cell, match.Index];
                 // look at only cell and match

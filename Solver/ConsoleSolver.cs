@@ -9,12 +9,14 @@ public static class ConsoleSolver
         foreach (var solution in Solver.Solve(puzzle, solvers))
         {
             PrintSolutionsAndUpdate(puzzle, solution, quiet, ref counts);
+            WriteLine(puzzle);
 
             if (!puzzle.IsValid)
             {
                 WriteLine("*****Puzzle is invalid.");
                 return;
             }
+
         }
 
         bool solved = puzzle.IsSolved;

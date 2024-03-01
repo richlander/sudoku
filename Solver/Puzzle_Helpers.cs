@@ -215,13 +215,11 @@ public partial class Puzzle
             }
         }
 
-        // goal is to find a an index that has two unique values (matching cell)
-        var matches = uniqueValues.Where(x => x.Value.Count is 2).ToList();
-
-        if (matches.Count is 1 && matches[0].Value.Count is 2)
+        // Naked pair: an index that has two unique values (matching cell)
+        if (uniqueValues.Where(x => x.Value.Count is 2).Count() is 1)
         {
-            var f = matches[0];
-            match = (f.Key, f.Value[0], f.Value[1]);
+            var value = uniqueValues.Where(x => x.Value.Count is 2).Single();
+            match = (value.Key, value.Value[0], value.Value[1]);
             return true;
         }
 
