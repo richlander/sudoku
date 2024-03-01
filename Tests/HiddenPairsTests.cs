@@ -1,24 +1,23 @@
 using Sudoku;
+using Xunit.Sdk;
 
 namespace Tests;
 
-public class NakedPairsTests
+public class HiddenPairsTests
 {
     [Fact]
-    public void NakedPairsTest()
+    public void HiddenPairsTest()
     {
         // Expected
         string name = "Test Solver";
         List<Solution> solutions = [
-            new(GetCell(18), -1, name){RemovalCandidates = [1]},
-            new(GetCell( 4), -1, name){RemovalCandidates = [1]},
-            new(GetCell( 5), -1, name){RemovalCandidates = [1, 6]},
-            new(GetCell( 6), -1, name){RemovalCandidates = [6]}
+            new(GetCell(42), -1, name){RemovalCandidates = [6, 9]},
+            new(GetCell(51), -1, name){RemovalCandidates = [1, 5, 9]}
         ];
         // Actual
-        string board = "400000938032094100095300240370609004529001673604703090957008300003900400240030709";
-        int index = 1;
-        NakedPairsSolver solver = new();
+        string board = "720408030080000047401076802810739000000851000000264080209680413340000008168943275";
+        int index = 42;
+        HiddenPairsSolver solver = new();
         Puzzle puzzle = new(board);
         Cell cell = Puzzle.GetCellForIndex(index);
 
@@ -33,4 +32,5 @@ public class NakedPairsTests
 
         static Cell GetCell(int index) => Puzzle.GetCellForIndex(index);
     }
+
 }

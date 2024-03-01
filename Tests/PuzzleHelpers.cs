@@ -26,4 +26,31 @@ public class PuzzleHelpers
         new XWingSolver()];
 
     public static List<ISolver> Solvers => solvers;
+
+    // Validate solution
+    public static void CheckSolutions(Cell cell, Solution? solution, List<Solution> expectedSolutions)
+    {
+        int count = 0;
+        while (solution is not null)
+        {
+            Assert.True(count < expectedSolutions.Count, $"Expected solutions: {expectedSolutions.Count}; Observed: {count};");
+            Solution expectedSolution = expectedSolutions[count];
+
+            if (solution.RemovalCandidates is null || expectedSolution.RemovalCandidates is null)
+            {
+                Assert.True(false, "Expected `RemovalCandidates` to be non-null");
+            }
+
+            int candidateCount = expectedSolution.RemovalCandidates.Count();
+            bool matchingCount = solution.RemovalCandidates.Count() == candidateCount;
+            bool matchingContent = solution.RemovalCandidates.Intersect(expectedSolution.RemovalCandidates).Count() == candidateCount;
+            bool matchingValue = solution.Value == expectedSolution.Value;
+            Assert.True(matchingCount && matchingContent && matchingValue, $"Expected candidate count: {candidateCount}; Observed: {solution.RemovalCandidates.Count()}; Cell: {cell}");
+            count++;
+            solution = solution.Next;
+        }
+    }
+
+    // Utility
+    public static string ErrorMessage => "Something wrong happended.";
 }
