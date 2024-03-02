@@ -11,21 +11,21 @@ public static class Solver
     {
         SolvedCellsSolver solvedCellsSolver = new();
         SolverPlaylist playlist = new(solvers);
-        Solution? solutions = null;
+        Solution? solution = null;
 
         do
         {
-            solutions = null;
             playlist.Add(solvedCellsSolver);
+            solution = null;
 
             foreach(ISolver solver in playlist.Play())
             {
                 // Search for solutions across board
                 for (int i = 0; i < 81; i++)
                 {
-                    if (TrySolveCell(puzzle, solver, i, out Solution? solution))
+                    if (TrySolveCell(puzzle, solver, i, out Solution? s))
                     {
-                        solutions = Puzzle.UpdateSolutionWithNextSolution(solutions, solution);
+                        solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
                         if (puzzle.IsSolved)
                         {
                             break;    
@@ -34,13 +34,13 @@ public static class Solver
                 }
 
                 // Need to run SolverCellsSolver next
-                if (solutions is not null)
+                if (solution is not null)
                 {
-                    yield return solutions;
+                    yield return solution;
                     break;
                 }
             }
-        } while (solutions is not null);
+        } while (solution is not null);
     }
 
     public static bool TrySolveCell(Puzzle puzzle, ISolver solver, int index, [NotNullWhen(true)] out Solution? solution)
@@ -54,5 +54,20 @@ public static class Solver
 
         Cell cell = puzzle.GetCell(index);
         return solver.TrySolve(puzzle, cell, out solution);
+    }
+
+    public static bool TrySolveCellAndUpdate(Puzzle puzzle, List<ISolver> solvers, int index, [NotNullWhen(true)] out Solution? solution)
+    {
+        foreach(ISolver solver in solvers)
+        {
+            if (TrySolveCell(puzzle, solver, index, out solution))
+            {
+                puzzle.UpdateBoard(solution);
+                return true;
+            }
+        }
+
+        solution = null;
+        return false;
     }
 }

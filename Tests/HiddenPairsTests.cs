@@ -23,7 +23,7 @@ public class HiddenPairsTests
 
         if (solver.TrySolve(puzzle, cell, out Solution? solution))
         {
-            PuzzleHelpers.CheckSolutions(cell, solution, solutions);
+            PuzzleHelpers.CheckSolutions(puzzle, solution, solutions);
         }
         else
         {

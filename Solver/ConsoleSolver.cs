@@ -26,7 +26,7 @@ public static class ConsoleSolver
         WriteLine(puzzle);
     }
 
-    public static void Solve(IEnumerable<string> lines, IReadOnlyList<ISolver> solvers, bool quiet = true)
+    public static void SolvePuzzles(IEnumerable<string> lines, IReadOnlyList<ISolver> solvers, bool quiet = true)
     {
 
         int solutions = 0;

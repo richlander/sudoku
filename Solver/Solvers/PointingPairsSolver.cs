@@ -4,7 +4,7 @@ using System.Threading.Channels;
 
 namespace Sudoku;
 
-public class PointedPairsSolver : ISolver
+public class PointingPairsSolver : ISolver
 {
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
@@ -17,7 +17,7 @@ public class PointedPairsSolver : ISolver
         if (puzzle.IsIndexFirstUnsolved(box.GetRowIndices(cell.BoxRow), cell))
         {
             IEnumerable<int> boxRow = box.GetRowIndices(cell.BoxRow);
-            if (puzzle.TryFindUniqueCandidates(boxRow, boxLine, Puzzle.GetRowIndices(cell.Row), nameof(PointedPairsSolver), out Solution? s))
+            if (puzzle.TryFindUniqueCandidates(boxRow, boxLine, Puzzle.GetRowIndices(cell.Row), nameof(PointingPairsSolver), out Solution? s))
             {
                 solution = s;
             }
@@ -28,7 +28,7 @@ public class PointedPairsSolver : ISolver
         if (puzzle.IsIndexFirstUnsolved(box.GetColumnIndices(cell.BoxColumn), cell))
         {
             IEnumerable<int> boxColumn = box.GetColumnIndices(cell.BoxColumn);
-            if (puzzle.TryFindUniqueCandidates(boxColumn, boxLine, Puzzle.GetColumnIndices(cell.Column), nameof(PointedPairsSolver), out Solution? s))
+            if (puzzle.TryFindUniqueCandidates(boxColumn, boxLine, Puzzle.GetColumnIndices(cell.Column), nameof(PointingPairsSolver), out Solution? s))
             {
                 solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
             }

@@ -9,7 +9,7 @@ public class NakedPairsTests
     {
         // Expected
         string name = "Test Solver";
-        List<Solution> solutions = [
+        List<Solution> expectedSolutions = [
             new(GetCell(18), -1, name){RemovalCandidates = [1]},
             new(GetCell( 4), -1, name){RemovalCandidates = [1]},
             new(GetCell( 5), -1, name){RemovalCandidates = [1, 6]},
@@ -21,15 +21,9 @@ public class NakedPairsTests
         NakedPairsSolver solver = new();
         Puzzle puzzle = new(board);
         Cell cell = Puzzle.GetCellForIndex(index);
-
-        if (solver.TrySolve(puzzle, cell, out Solution? solution))
-        {
-            PuzzleHelpers.CheckSolutions(cell, solution, solutions);
-        }
-        else
-        {
-            Assert.Fail(PuzzleHelpers.ErrorMessage);
-        }
+        // Test
+        IEnumerable<Solution> solutions = Solver.Solve(puzzle, [solver]);
+        PuzzleHelpers.CheckSolutions(puzzle, solutions, expectedSolutions);
 
         static Cell GetCell(int index) => Puzzle.GetCellForIndex(index);
     }

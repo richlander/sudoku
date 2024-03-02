@@ -21,35 +21,73 @@ public class PuzzleHelpers
         new HiddenSinglesSolver(),
         new NakedPairsSolver(),
         new HiddenPairsSolver(),
-        new PointedPairsSolver(),
+        new PointingPairsSolver(),
         new BoxLineReductionSolver(),
         new XWingSolver()];
 
     public static List<ISolver> Solvers => solvers;
 
     // Validate solution
-    public static void CheckSolutions(Cell cell, Solution? solution, List<Solution> expectedSolutions)
+    public static void CheckSolutions(Puzzle puzzle, IEnumerable<Solution> solutions, List<Solution> expectedSolutions)
     {
-        int count = 0;
-        while (solution is not null)
+        foreach (Solution solution in solutions)
         {
-            Assert.True(count < expectedSolutions.Count, $"Expected solutions: {expectedSolutions.Count}; Observed: {count};");
-            Solution expectedSolution = expectedSolutions[count];
+            int count = CheckSolutions(puzzle, solution, expectedSolutions);
 
-            if (solution.RemovalCandidates is null || expectedSolution.RemovalCandidates is null)
+            if (count < expectedSolutions.Count)
             {
-                Assert.True(false, "Expected `RemovalCandidates` to be non-null");
+                expectedSolutions.RemoveRange(0, count);
             }
-
-            int candidateCount = expectedSolution.RemovalCandidates.Count();
-            bool matchingCount = solution.RemovalCandidates.Count() == candidateCount;
-            bool matchingContent = solution.RemovalCandidates.Intersect(expectedSolution.RemovalCandidates).Count() == candidateCount;
-            bool matchingValue = solution.Value == expectedSolution.Value;
-            Assert.True(matchingCount && matchingContent && matchingValue, $"Expected candidate count: {candidateCount}; Observed: {solution.RemovalCandidates.Count()}; Cell: {cell}");
-            count++;
-            solution = solution.Next;
+            else
+            {
+                return;
+            }
         }
     }
+
+    public static int CheckSolutions(Puzzle puzzle, Solution solutions, List<Solution> expectedSolutions)
+    {
+        puzzle.UpdateBoard(solutions);
+        int count = 0;
+        IEnumerator<Solution> expected = expectedSolutions.GetEnumerator();
+        foreach (Solution solution in Solution.Enumerate(solutions))
+        {
+            if (!expected.MoveNext())
+            {
+                return count;
+            }
+
+            Solution expectedSolution = expected.Current;
+            if (solution.RemovalCandidates is null || expectedSolution.RemovalCandidates is null)
+            {
+                Assert.Fail(PuzzleHelpers.ErrorMessage);
+                return -1;
+            }
+
+            CheckSolution(solution, expectedSolution);
+            count++;
+        }
+
+        return count;
+    }
+
+    public static void CheckSolution(Solution solution, Solution expectedSolution)
+    {
+
+        if (solution.RemovalCandidates is null || expectedSolution.RemovalCandidates is null)
+        {
+            Assert.Fail("Expected `RemovalCandidates` to be non-null");
+            return;
+        }
+
+        int candidateCount = expectedSolution.RemovalCandidates.Count();
+        bool matchingCount = solution.RemovalCandidates.Count() == candidateCount;
+        bool matchingContent = solution.RemovalCandidates.Intersect(expectedSolution.RemovalCandidates).Count() == candidateCount;
+        bool matchingValue = solution.Value == expectedSolution.Value;
+        bool matching = matchingCount && matchingContent && matchingValue;
+        Assert.True(matching, $"Expected: {expectedSolution}; Observed: {solution}");
+    }
+
 
     // Utility
     public static string ErrorMessage => "Something wrong happended.";

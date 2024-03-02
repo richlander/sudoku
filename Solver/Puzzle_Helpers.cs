@@ -194,7 +194,7 @@ public partial class Puzzle
         return true;
     }
 
-   public bool TryFindMatchingCandidatePairs(Cell cell, IEnumerable<int> line, out (int Index, int Value1, int Value2) match)
+    public bool TryFindMatchingCandidatePairs(Cell cell, IEnumerable<int> line, out (int Index, int Value1, int Value2) match)
     {
         IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
         // index, values
