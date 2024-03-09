@@ -112,6 +112,38 @@ public partial class Puzzle
         return false;
     }
 
+    // Finds candidate matches in one and only one other cell in line relative to cell
+    public bool TryFindHiddenMatchingCandidates(Cell cell, IEnumerable<int> line, [NotNullWhen(true)] out Dictionary<int, List<int>>? matches)
+    {
+        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
+        // index, values
+        Dictionary<int, List<int>> uniqueValues = [];
+        // For each candidate, does it show up again and just once?
+        foreach (int candidate in cellCandidates)
+        {
+            // Add an entry for each value we find
+            if (TryFindIndexForUniqueValue(cell, line, candidate, out int uniqueIndex))
+            {
+                if (!uniqueValues.TryGetValue(uniqueIndex, out List<int>? values))
+                {
+                    values = [];
+                    uniqueValues.Add(uniqueIndex, values);
+                }
+                
+                values.Add(candidate);
+            }
+        }
+
+        if (uniqueValues.Count > 0)
+        {
+            matches = uniqueValues;
+            return true;
+        }
+
+        matches = null;
+        return false;
+    }
+
     // Finds unique candidates in targetLine relative to homeLine
     // May return multiple candidates
     // This is typically candidates unique in a row within a box (or similar)
@@ -146,6 +178,9 @@ public partial class Puzzle
         return true;
     }
 
+    // Finds solutions in searchline using candidates that are inique in targetLine relative to homeLine
+    // This is typically candidates unique in a row within a box (or similar), which locks those candidates
+    // and allows removing them in the full row (minus the row in the box)
     public bool TryFindSolutionWithIntersectionRemoval(IEnumerable<int> targetLine, IEnumerable<int> homeLine, IEnumerable<int> searchLine, ISolver solver, [NotNullWhen(true)] out Solution? solution)
     {
         solution = null;
@@ -173,36 +208,5 @@ public partial class Puzzle
         }
 
         return true;
-    }
-
-    public bool TryFindHiddenMatchingCandidates(Cell cell, IEnumerable<int> line, [NotNullWhen(true)] out Dictionary<int, List<int>>? matches)
-    {
-        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
-        // index, values
-        Dictionary<int, List<int>> uniqueValues = [];
-        // For each candidate, does it show up again and just once?
-        foreach (int candidate in cellCandidates)
-        {
-            // Add an entry for each value we find
-            if (TryFindIndexForUniqueValue(cell, line, candidate, out int uniqueIndex))
-            {
-                if (!uniqueValues.TryGetValue(uniqueIndex, out List<int>? values))
-                {
-                    values = [];
-                    uniqueValues.Add(uniqueIndex, values);
-                }
-                
-                values.Add(candidate);
-            }
-        }
-
-        if (uniqueValues.Count > 0)
-        {
-            matches = uniqueValues;
-            return true;
-        }
-
-        matches = null;
-        return false;
     }
 }
