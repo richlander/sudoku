@@ -27,7 +27,7 @@ if (File.Exists(input))
 else if (input.Length is 81)
 {
     Puzzle puzzle = new(input);
-    ConsoleSolver.Solve(puzzle, solvers);
+    ConsoleSolver.Solve(puzzle, solvers, false);
 }
 else
 {

@@ -5,6 +5,14 @@ public static class ConsoleSolver
 {
     public static void Solve(Puzzle puzzle, IReadOnlyList<ISolver> solvers, bool quiet = true)
     {
+        WriteLine();
+        if (!quiet)
+        {
+            WriteLine("**** Initial board");
+            WriteLine();
+            DrawSolution(puzzle, null);
+        }
+
         Counts counts = new();
         foreach (var solution in Solver.Solve(puzzle, solvers))
         {
@@ -83,11 +91,11 @@ public static class ConsoleSolver
             {
                 counts.CellsSolved++;
                 Cell cell = nextSolution.Cell;
+                WriteLine($"{cell.Row},{cell.Column} ({cell.Index, 2}); {nextSolution.Value}");
                 if (!quiet)
                 {
                     DrawSolution(puzzle, nextSolution);
                 }
-                WriteLine($"{cell.Row},{cell.Column} ({cell.Index, 2}); {nextSolution.Value}");
             }
             else if (nextSolution.RemovalCandidates is not null)
             {
@@ -136,10 +144,12 @@ public static class ConsoleSolver
         return counts;
     }
 
-    public static void DrawSolution(Puzzle puzzle, Solution solution)
+    public static void DrawSolution(Puzzle puzzle, Solution? solution)
     {
-        WriteLine(solution.Solver);
-        PrintColumnSolution(solution);
+        if (solution is not null)
+        {
+            PrintColumnSolution(solution);
+        }
 
         for (int i = 0; i < 9; i++)
         {
@@ -166,7 +176,7 @@ public static class ConsoleSolver
                 }
             }
 
-            if (i == solution.Cell.Row)
+            if (solution is not null && i == solution.Cell.Row)
             {
                 Write("*");
             }
@@ -176,7 +186,7 @@ public static class ConsoleSolver
 
         WriteLine();
 
-        void PrintColumnSolution(Solution solution)
+        static void PrintColumnSolution(Solution solution)
         {
             for(int i = 0; i < solution.Cell.Column; i++)
             {

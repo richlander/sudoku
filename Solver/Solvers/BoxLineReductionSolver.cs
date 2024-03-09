@@ -5,6 +5,8 @@ namespace Sudoku;
 // Almost identical to pointed pairs, with a sort of 90° translated mirror of the algorithm
 public class BoxLineReductionSolver : ISolver
 {
+    public string Name => nameof(BoxLineReductionSolver);
+
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
         solution = null;
@@ -16,7 +18,7 @@ public class BoxLineReductionSolver : ISolver
         {
             IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
             IEnumerable<int> boxRow = box.GetRowIndices(cell.BoxRow);
-            if (puzzle.TryFindUniqueCandidates(boxRow, Puzzle.GetRowIndices(cell.Row), boxLine, $"{nameof(BoxLineReductionSolver)}:Row", out Solution? s))
+            if (puzzle.TryFindSolutionWithIntersectionRemoval(boxRow, Puzzle.GetRowIndices(cell.Row), boxLine, this, out Solution? s))
             {
                 solution = s;
             }
@@ -28,7 +30,7 @@ public class BoxLineReductionSolver : ISolver
         {
             IEnumerable<int> boxLine = Puzzle.GetBoxIndices(cell.Box);
             IEnumerable<int> boxColumn = box.GetColumnIndices(cell.BoxColumn);
-            if (puzzle.TryFindUniqueCandidates(boxColumn, Puzzle.GetColumnIndices(cell.Column), boxLine, $"{nameof(BoxLineReductionSolver)}:Column", out Solution? s))
+            if (puzzle.TryFindSolutionWithIntersectionRemoval(boxColumn, Puzzle.GetColumnIndices(cell.Column), boxLine, this, out Solution? s))
             {
                 solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
             }

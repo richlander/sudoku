@@ -1,4 +1,3 @@
-using System.Net;
 using Sudoku;
 
 namespace Tests;

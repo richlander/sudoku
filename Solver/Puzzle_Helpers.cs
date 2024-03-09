@@ -68,8 +68,22 @@ public partial class Puzzle
     }
 
     // Board solving
+    public HashSet<int> MergeCandidates(IEnumerable<int> line)
+    {
+        HashSet<int> mergedCandidates = [];
+
+        foreach(int index in line)
+        {
+            IEnumerable<int> candidates = GetCellCandidates(index);
+            mergedCandidates.AddRange(candidates);
+        }
+
+        return mergedCandidates;
+    }
+
     // Finds unique index in line that contains a specific candidate value
-    public bool TryFindValueAppearsOnce(Cell cell, IEnumerable<int> line, int uniqueValue, out int uniqueIndex)
+    // Must visit all elements to validate constraint
+    public bool TryFindIndexForUniqueValue(Cell cell, IEnumerable<int> line, int uniqueValue, out int uniqueIndex)
     {
         uniqueIndex = -1;
         int matchIndex = -1;
@@ -89,27 +103,112 @@ public partial class Puzzle
             matchIndex = neighborIndex;
         }
 
-        if (matchIndex is -1)
+        if (matchIndex > -1)
+        {
+            uniqueIndex = matchIndex;
+            return true;
+        }
+
+        return false;
+    }
+
+    // Finds unique candidates in targetLine relative to homeLine
+    // May return multiple candidates
+    // This is typically candidates unique in a row within a box (or similar)
+    public bool TryFindUniqueCandidatesInTargetLine(IEnumerable<int> targetLine, IEnumerable<int> homeLine, [NotNullWhen(true)] out HashSet<int>? uniqueCandidates)
+    {
+        uniqueCandidates = null;
+        HashSet<int> targets = new(targetLine);
+        HashSet<int> targetCandidates = MergeCandidates(targetLine);
+
+        if (targetCandidates.Count is 0)
         {
             return false;
         }
 
-        uniqueIndex = matchIndex;
+        // Filter homeLine
+        IEnumerable<int> homeLineFiltered = homeLine.Where(x => !(IsCellSolved(x) || targets.Contains(x)));
+
+        // Start removing candidates, from homeLine
+        foreach (int index in homeLineFiltered)
+        {
+            IEnumerable<int> candidates = GetCellCandidates(index);
+            targetCandidates.RemoveRange(candidates);
+
+            if (targetCandidates.Count is 0)
+            {
+                // There is no unique candidate
+                return false;
+            }
+        }
+
+        uniqueCandidates = targetCandidates;
         return true;
+    }
+
+    public bool TryFindSolutionWithIntersectionRemoval(IEnumerable<int> targetLine, IEnumerable<int> homeLine, IEnumerable<int> searchLine, ISolver solver, [NotNullWhen(true)] out Solution? solution)
+    {
+        solution = null;
+        if (TryFindUniqueCandidatesInTargetLine(targetLine, homeLine, out HashSet<int>? uniqueCandidates))
+        {
+            foreach (int candidate in uniqueCandidates)
+            {
+                List<int> targets = targetLine.Where(x => GetCellCandidates(x).Contains(candidate)).ToList();
+                foreach (int index in searchLine.Where(x => !targetLine.Contains(x) && GetCellCandidates(x).Contains(candidate)))
+                {
+                    Solution s = new(GetCell(index), -1, solver.Name)
+                    {
+                        RemovalCandidates = [ candidate ],
+                        AlignedIndices = targets,
+                        Next = solution
+                    };
+                    solution = s;
+                }
+            }
+        }
+
+        if (solution is null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool TryFindSomething(HashSet<int> targetCandidates, IEnumerable<int> searchLine, out Dictionary<int, List<int>> matches)
+    {
+        matches = [];
+        // targetCandidates can now be removed from the rest of the `searchLine`
+        foreach (int target in targetCandidates)
+        {
+            List<int> hasCandidate = searchLine.Where(x => 
+                !IsCellSolved(x) && 
+                GetCellCandidates(x).Contains(target))
+                .ToList();
+
+            if (hasCandidate.Count > 0)
+            {
+                matches.Add(target, hasCandidate);
+            }
+        }
+
+        if (matches.Count > 0)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public bool TryFindUniqueCandidates(IEnumerable<int> targetLine, IEnumerable<int> homeLine, IEnumerable<int> searchLine, string solver, [NotNullWhen(true)] out Solution? solution)
     {
         solution = null;
         HashSet<int> targets = new(targetLine);
-        HashSet<int> targetCandidates = new(9);
-        
-        // Unify the list of candidates
-        // Doesn't matter if a candidate shows up in one or all cells
-        foreach(int index in targets)
+        HashSet<int> targetCandidates = MergeCandidates(targetLine);
+
+        if (targetCandidates.Count is 0)
         {
-            IEnumerable<int> candidates = GetCellCandidates(index);
-            targetCandidates.AddRange(candidates);
+            return false;
         }
 
         // Filter homeLine
@@ -161,40 +260,7 @@ public partial class Puzzle
         return true;
     }
 
-    // Finds unique index in line that contains a candidate pair (and only that pair)
-    // Assumed that cell has only two candidates
-    public bool TryFindCandidatePairsMatchCell(Cell cell, IEnumerable<int> line, out int uniqueIndex)
-    {
-        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
-        uniqueIndex = -1;
-        int matchIndex = -1;
-        foreach (int neighborIndex in line.Where(x => x !=cell))
-        {
-            IReadOnlyList<int> neighborCandidates = GetCellCandidates(neighborIndex);
-            if (neighborCandidates.Count is not 2 || 
-                neighborCandidates.Intersect(cellCandidates).Count() is not 2)
-            {
-                continue;
-            }
-            
-            if (matchIndex > -1)
-            {
-                return false;
-            }
-
-            matchIndex = neighborIndex;
-        }
-
-        if (matchIndex is -1)
-        {
-            return false;
-        }
-
-        uniqueIndex = matchIndex;
-        return true;
-    }
-
-    public bool TryFindMatchingCandidatePairs(Cell cell, IEnumerable<int> line, out (int Index, int Value1, int Value2) match)
+    public bool TryFindHiddenMatchingCandidates(Cell cell, IEnumerable<int> line, [NotNullWhen(true)] out Dictionary<int, List<int>>? matches)
     {
         IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
         // index, values
@@ -203,7 +269,7 @@ public partial class Puzzle
         foreach (int candidate in cellCandidates)
         {
             // Add an entry for each value we find
-            if (TryFindValueAppearsOnce(cell, line, candidate, out int uniqueIndex))
+            if (TryFindIndexForUniqueValue(cell, line, candidate, out int uniqueIndex))
             {
                 if (!uniqueValues.TryGetValue(uniqueIndex, out List<int>? values))
                 {
@@ -215,15 +281,13 @@ public partial class Puzzle
             }
         }
 
-        // Naked pair: an index that has two unique values (matching cell)
-        if (uniqueValues.Where(x => x.Value.Count is 2).Count() is 1)
+        if (uniqueValues.Count > 0)
         {
-            var value = uniqueValues.Where(x => x.Value.Count is 2).Single();
-            match = (value.Key, value.Value[0], value.Value[1]);
+            matches = uniqueValues;
             return true;
         }
 
-        match = default;
+        matches = null;
         return false;
     }
 }

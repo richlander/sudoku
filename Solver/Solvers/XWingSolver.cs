@@ -8,6 +8,8 @@ namespace Sudoku;
 
 public class XWingSolver : ISolver
 {
+        public string Name => nameof(XWingSolver);
+
     /*
         This is like an elaborate version of (double) pointed pairs
         Multi-step process:
@@ -60,7 +62,7 @@ public class XWingSolver : ISolver
         {
             // Find cells in column (in other boxes) with the same candidates; we want just one
             IEnumerable<int> column = Puzzle.GetColumnIndices(cell.Column).Where(x => x != lowerLeftIndex);
-            if (puzzle.TryFindValueAppearsOnce(cell, column, candidate, out int higherLeftIndex))
+            if (puzzle.TryFindIndexForUniqueValue(cell, column, candidate, out int higherLeftIndex))
             {
                 // can skip case were higher cells "look up" the column (will produce same result)
                 // If the single match is in the same box, reject
@@ -85,7 +87,7 @@ public class XWingSolver : ISolver
                     // If column is locked, check if rows match
                     // Find cells in column (in other boxes) with the same candidates; we want just one
                     IEnumerable<int> higherColumn = Puzzle.GetColumnIndices(higherRightCell.Column).Where(x => x != higherRightCell);
-                    if (puzzle.TryFindValueAppearsOnce(higherRightCell, higherColumn, candidate, out int lowerRightIndex))
+                    if (puzzle.TryFindIndexForUniqueValue(higherRightCell, higherColumn, candidate, out int lowerRightIndex))
                     {
    
                         // Test of X-Wing
@@ -101,7 +103,7 @@ public class XWingSolver : ISolver
 
                             foreach (int index in finalList)
                             {
-                                Solution s = new(puzzle.GetCell(index), -1, $"{nameof(XWingSolver)}:Column")
+                                Solution s = new(puzzle.GetCell(index), -1, $"{Name}:Column")
                                 {
                                     RemovalCandidates = [candidate],
                                     AlignedCandidates = [candidate],
@@ -133,7 +135,7 @@ public class XWingSolver : ISolver
         {
             // Find cells in row (in other boxes) with the same candidates; we want just one
             IEnumerable<int> row = Puzzle.GetRowIndices(cell.Row).Where(x => x != lowerLeftIndex);
-            if (puzzle.TryFindValueAppearsOnce(cell, row, candidate, out int lowerRightIndex))
+            if (puzzle.TryFindIndexForUniqueValue(cell, row, candidate, out int lowerRightIndex))
             {
                 // can skip case were higher cells "look left" across the row (will produce same result)
                 // If the single match is in the same box, reject
@@ -158,7 +160,7 @@ public class XWingSolver : ISolver
                     // If row is locked, check if columns match
                     // Find cells in row (in other boxes) with the same candidates; we want just one
                     IEnumerable<int> higherRow = Puzzle.GetRowIndices(higherRightCell.Row).Where(x => x != higherRightIndex);
-                    if (puzzle.TryFindValueAppearsOnce(higherRightCell, higherRow, candidate, out int higherLeftIndex))
+                    if (puzzle.TryFindIndexForUniqueValue(higherRightCell, higherRow, candidate, out int higherLeftIndex))
                     {
    
                         // Test of X-Wing
@@ -174,7 +176,7 @@ public class XWingSolver : ISolver
 
                             foreach (int index in finalList)
                             {
-                                Solution s = new(puzzle.GetCell(index), -1, $"{nameof(XWingSolver)}:Row")
+                                Solution s = new(puzzle.GetCell(index), -1, $"{Name}:Row")
                                 {
                                     RemovalCandidates = [candidate],
                                     AlignedCandidates = [candidate],
