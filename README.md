@@ -21,7 +21,5 @@ The [solver](https://www.sudokuwiki.org/sudoku.htm) at [SudokuWiki](https://www.
 The following resources were found to be useful.
 
 - https://www.sudokuwiki.org/
-- https://www.printable-sudoku-puzzles.com/wfiles/
 - https://www.reddit.com/r/sudoku/wiki/index/
-- https://github.com/dimitri/sudoku
 - http://sudopedia.enjoysudoku.com/Valid_Test_Cases.html
