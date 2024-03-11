@@ -8,6 +8,8 @@ namespace Sudoku;
 
 public class XWingSolver : ISolver
 {
+        public string Name => nameof(XWingSolver);
+
     /*
         This is like an elaborate version of (double) pointed pairs
         Multi-step process:
@@ -42,38 +44,25 @@ public class XWingSolver : ISolver
         }
 
         IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
-        if (TrySolveColumn(puzzle, cell, cellCandidates, out (int Value, List<int> Indices) winged) ||
-            TrySolveRow(puzzle, cell, cellCandidates, out winged))
+        if (TrySolveColumn(puzzle, cell, cellCandidates, out solution) ||
+            TrySolveRow(puzzle, cell, cellCandidates, out solution))
         {
-            foreach (int index in winged.Indices)
-            {
-                Cell solutionCell = puzzle.GetCell(index);
-                Solution s = new(solutionCell, -1, [winged.Value], nameof(XWingSolver))
-                {
-                    Next = solution
-                };
-
-                solution = s;
-            }
-
-            if (solution is {})
-            {
-                return true;
-            }
+            return true;
         }
 
         return false;
     }
 
     // This rectangle gets drawn counterclockwise, down, right, up, and then up left again
-    public bool TrySolveColumn(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out (int Value, List<int> Indices) winged)
+    public bool TrySolveColumn(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out Solution? solution)
     {
+        solution = null;
         int lowerLeftIndex = cell;
         foreach (int candidate in cellCandidates)
         {
             // Find cells in column (in other boxes) with the same candidates; we want just one
             IEnumerable<int> column = Puzzle.GetColumnIndices(cell.Column).Where(x => x != lowerLeftIndex);
-            if (puzzle.TryFindValueAppearsOnce(cell, column, candidate, out int higherLeftIndex))
+            if (puzzle.TryFindIndexForUniqueValue(cell, column, candidate, out int higherLeftIndex))
             {
                 // can skip case were higher cells "look up" the column (will produce same result)
                 // If the single match is in the same box, reject
@@ -98,7 +87,7 @@ public class XWingSolver : ISolver
                     // If column is locked, check if rows match
                     // Find cells in column (in other boxes) with the same candidates; we want just one
                     IEnumerable<int> higherColumn = Puzzle.GetColumnIndices(higherRightCell.Column).Where(x => x != higherRightCell);
-                    if (puzzle.TryFindValueAppearsOnce(higherRightCell, higherColumn, candidate, out int lowerRightIndex))
+                    if (puzzle.TryFindIndexForUniqueValue(higherRightCell, higherColumn, candidate, out int lowerRightIndex))
                     {
    
                         // Test of X-Wing
@@ -112,9 +101,20 @@ public class XWingSolver : ISolver
                             finalList.AddRange(lowRowCandidates);
                             finalList.AddRange(highRowCandidates);
 
-                            if (finalList.Count > 0)
+                            foreach (int index in finalList)
                             {
-                                winged = (candidate, finalList);
+                                Solution s = new(puzzle.GetCell(index), -1, $"{Name}:Column")
+                                {
+                                    RemovalCandidates = [candidate],
+                                    AlignedCandidates = [candidate],
+                                    AlignedIndices = [lowerLeftIndex, lowerRightIndex, higherLeftIndex, higherRightIndex],
+                                };
+
+                                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                            }
+
+                            if (solution is not null)
+                            {
                                 return true;
                             }
                         }
@@ -123,19 +123,19 @@ public class XWingSolver : ISolver
             }
         }
 
-        winged = default;
         return false;
     }
 
     // This rectangle gets drawn clockwise, right, down, left, and then up again
-    public bool TrySolveRow(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out (int Value, List<int> Indices) winged)
+    public bool TrySolveRow(Puzzle puzzle, Cell cell, IReadOnlyList<int> cellCandidates, [NotNullWhen(true)] out Solution? solution)
     {
+        solution = null;
         int lowerLeftIndex = cell;
         foreach (int candidate in cellCandidates)
         {
             // Find cells in row (in other boxes) with the same candidates; we want just one
             IEnumerable<int> row = Puzzle.GetRowIndices(cell.Row).Where(x => x != lowerLeftIndex);
-            if (puzzle.TryFindValueAppearsOnce(cell, row, candidate, out int lowerRightIndex))
+            if (puzzle.TryFindIndexForUniqueValue(cell, row, candidate, out int lowerRightIndex))
             {
                 // can skip case were higher cells "look left" across the row (will produce same result)
                 // If the single match is in the same box, reject
@@ -160,7 +160,7 @@ public class XWingSolver : ISolver
                     // If row is locked, check if columns match
                     // Find cells in row (in other boxes) with the same candidates; we want just one
                     IEnumerable<int> higherRow = Puzzle.GetRowIndices(higherRightCell.Row).Where(x => x != higherRightIndex);
-                    if (puzzle.TryFindValueAppearsOnce(higherRightCell, higherRow, candidate, out int higherLeftIndex))
+                    if (puzzle.TryFindIndexForUniqueValue(higherRightCell, higherRow, candidate, out int higherLeftIndex))
                     {
    
                         // Test of X-Wing
@@ -174,9 +174,20 @@ public class XWingSolver : ISolver
                             finalList.AddRange(leftColumnCandidates);
                             finalList.AddRange(rightColumnCandidates);
 
-                            if (finalList.Count > 0)
+                            foreach (int index in finalList)
                             {
-                                winged = (candidate, finalList);
+                                Solution s = new(puzzle.GetCell(index), -1, $"{Name}:Row")
+                                {
+                                    RemovalCandidates = [candidate],
+                                    AlignedCandidates = [candidate],
+                                    AlignedIndices = [lowerLeftIndex, lowerRightIndex, higherLeftIndex, higherRightIndex],
+                                };
+
+                                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                            }
+
+                            if (solution is not null)
+                            {
                                 return true;
                             }
                         }
@@ -185,7 +196,6 @@ public class XWingSolver : ISolver
             }
         }
 
-        winged = default;
         return false;
     }
 }

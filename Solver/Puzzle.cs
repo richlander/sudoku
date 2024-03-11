@@ -11,10 +11,9 @@ namespace Sudoku;
 public partial class Puzzle
 {
     private readonly int[] _board = new int[81];
-    private readonly Box[] _boxes = new Box[9];
     private readonly Cell[] _cells = new Cell[81];
     private readonly List<int>[] _candidates = new List<int>[81];
-    private readonly List<int> _emptyList = [];
+    private readonly Box[] _boxes = new Box[9];
     
     public Puzzle(string puzzle)
     {
@@ -22,10 +21,10 @@ public partial class Puzzle
     }
 
     /*  Terms:
-        puzzle  -- the 81 cell board
-        unit    -- a puzzle concept: cell, box, column, row
-        index   -- used primarily to define a puzzle unit
-        line    -- 9 indices or values in a box, column, or box
+        puzzle  -- the 81 cell board and associated functionality
+        cell    -- single cell on the board
+        unit    -- a 9 cell grouping: box, column, row
+        line    -- 9 one-dimentional indices or values in a box, column, or box
     */
 
     // Board values
@@ -50,46 +49,14 @@ public partial class Puzzle
     // Cell candidates
     public IReadOnlyList<int> GetCellCandidates(int index) => _candidates[index];
 
-    public IEnumerable<List<int>> GetCellCandidates(IEnumerable<int> line)
-    {
-        foreach (int index in line)
-        {
-            yield return _candidates[index];
-        }
-    }
-
-    public IEnumerable<IEnumerable<List<int>>> GetCellCandidates(IEnumerable<IEnumerable<int>> lines)
-    {
-        foreach (IEnumerable<int> row in lines)
-        {
-            yield return GetCellCandidates(row);
-        }
-    }
-
     // Unit info
     public Cell GetCell(int index) => _cells[index];
     
     public Box GetBox(int index) => _boxes[index];
 
-    public BoxSet GetBoxSet(int index)
-    {
-        // Get boxes
-        Box box = GetBox(index);
-        // get adjacent neighboring boxes
-        Box ahnb1 = GetBox(box.FirstHorizontalNeighbor);
-        Box ahnb2 = GetBox(box.SecondHorizontalNeighbor);
-        Box avnb1 = GetBox(box.FirstVerticalNeighbor);
-        Box avnb2 = GetBox(box.SecondVerticalNeighbor);
-
-        return new BoxSet(
-            box,
-            ahnb1,
-            ahnb2,
-            avnb1,
-            avnb2);
-    }
-
     // Solution data  
+    public int SolvedCellsInitial {get; private set; }
+
     public int SolvedCells {get; private set; }
     
     public bool IsSolved => SolvedCells is 81 && IsValid;
@@ -109,6 +76,7 @@ public partial class Puzzle
         return true;
     }
 
+    // The intent is that this API provides sufficient information to identify problematic cells
     public IEnumerable<int> FindDuplicatesCells()
     {
         for (int i = 0; i < 9; i++)
@@ -141,7 +109,8 @@ public partial class Puzzle
             {
                 continue;
             }
-            else if (!values.Add(value))
+            
+            if (!values.Add(value))
             {
                 yield return index;
             }
@@ -164,6 +133,8 @@ public partial class Puzzle
             SolvedCells += value > 0 ? 1 : 0;
         }
 
+        SolvedCellsInitial = SolvedCells;
+
         // Things that are cell-specific
         for (int i = 0; i < puzzle.Length; i++)
         {
@@ -179,7 +150,7 @@ public partial class Puzzle
             }
             else
             {
-                _candidates[i] = _emptyList;
+                _candidates[i] = [];
             }
         }
 
@@ -187,37 +158,50 @@ public partial class Puzzle
         for (int i = 0; i < 9; i++)
         {
             _boxes[i] = new Box(i);
-            // SolvedCells = GetRowValues(i).Count(x => x > 0);
         }
     }
 
     // Updating puzzle
-    public bool Update(Solution solution)
+    public bool UpdateCell(Solution solution)
     {
-        int index = solution.Cell;
         Cell cell = solution.Cell;
-        if (_board[index] != 0 || SolvedCells is 81)
+        if (_board[cell] != 0 || SolvedCells is 81)
         {
             throw new Exception("Something went wrong! Oops.");    
         }
 
-        if (solution.Value is -1)
+        if (solution.Value > 0)
         {
-            List<int> candidates = _candidates[index];
-            foreach (int value in solution.Removed)
+            _board[cell] = solution.Value;
+            SolvedCells++;
+            _candidates[cell] = [];
+
+            // `true` indicates that a new board value was found
+            // This bool is intended to avoid the need for readers to peek into `solution`
+            return true;
+        }
+        else if (solution.RemovalCandidates is not null)
+        {
+            List<int> candidates = _candidates[cell];
+            foreach (int value in solution.RemovalCandidates)
             {
                 candidates.Remove(value);
             }
-
-            return false;
         }
 
-        _board[index] = solution.Value;
-        SolvedCells++;
-        _candidates[index] = _emptyList;
+        return false;
+    }
 
-        // `true` indicators that a new board value was found
-        return true;
+    public void UpdateBoard(Solution solution)
+    {
+        Solution? nextSolution = solution;
+        while (nextSolution is not null)
+        {
+            UpdateCell(nextSolution);
+            nextSolution = nextSolution.Next;
+        }
+
+        UpdateCandidates();
     }
 
     public void UpdateCandidates()
@@ -245,6 +229,11 @@ public partial class Puzzle
         {
             foreach (int value in line)
             {
+                if (value is 0)
+                {
+                    continue;
+                }
+
                 cellCandidates.Remove(value);
             }
         }

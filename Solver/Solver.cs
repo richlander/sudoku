@@ -7,91 +7,40 @@ namespace Sudoku;
 
 public static class Solver
 {
-
-    public static bool Solve(Puzzle puzzle, List<ISolver> solvers)
+    public static IEnumerable<Solution> Solve(Puzzle puzzle, IReadOnlyList<ISolver> solvers)
     {
-        int solutions = 0;
-        bool solutionsFound = true;
         SolvedCellsSolver solvedCellsSolver = new();
         SolverPlaylist playlist = new(solvers);
+        Solution? solution = null;
 
-        while (solutionsFound)
+        do
         {
-            solutionsFound = false;
             playlist.Add(solvedCellsSolver);
+            solution = null;
 
             foreach(ISolver solver in playlist.Play())
             {
-                int newSolutions = 0;
-                List<Solution> solutionBag = new(12);
-
                 // Search for solutions across board
                 for (int i = 0; i < 81; i++)
                 {
-                    if (TrySolveCell(puzzle, solver, i, out Solution? solution))
+                    if (TrySolveCell(puzzle, solver, i, out Solution? s))
                     {
-                        solutionBag.Add(solution);
-
-                        Solution? next = solution.Next;
-                        
-                        while (next is not null)
+                        solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                        if (puzzle.IsSolved)
                         {
-                            solutionBag.Add(next);
-                            next = next.Next;
+                            break;    
                         }
                     }
                 }
-                
-                // Found nothing so bail
-                if (solutionBag.Count is 0)
+
+                // Need to run SolverCellsSolver next
+                if (solution is not null)
                 {
-                    continue;
+                    yield return solution;
+                    break;
                 }
-
-                Console.WriteLine("**Stage**");
-                // Process solutions
-                foreach (Solution solution in solutionBag)
-                {
-
-                    if (puzzle.Update(solution))
-                    {
-                        newSolutions++;
-                        Cell cell = solution.Cell;
-                        Console.WriteLine($"{cell.Row},{cell.Column}: {solution.Value}; {solution.Solver}");
-                    }
-                    else
-                    {
-                        newSolutions++;
-                        Cell cell = solution.Cell;
-                        Console.Write($"{cell.Row},{cell.Column}; Removed: ");
-
-                        foreach(var c in solution.Removed)
-                        {
-                            Console.Write($"{c}, ");
-                        }
-
-                        Console.WriteLine($"; {solution.Solver}");
-                    }
-                }
-
-                solutions += newSolutions;
-                
-                if (puzzle.IsSolved)
-                {
-                    break;    
-                }
-
-                solutionsFound |= newSolutions > 0;
-                puzzle.UpdateCandidates();
-                break;
             }
-        }
-        bool solved = puzzle.IsSolved;
-        bool valid = solved || puzzle.IsValid;
-        Console.WriteLine($"Solutions applied: {solutions}; Complete: {solved}; Valid: {valid}");
-        Console.WriteLine(puzzle.ToString());
-
-        return solved;
+        } while (solution is not null);
     }
 
     public static bool TrySolveCell(Puzzle puzzle, ISolver solver, int index, [NotNullWhen(true)] out Solution? solution)
@@ -105,5 +54,20 @@ public static class Solver
 
         Cell cell = puzzle.GetCell(index);
         return solver.TrySolve(puzzle, cell, out solution);
+    }
+
+    public static bool TrySolveCellAndUpdate(Puzzle puzzle, List<ISolver> solvers, int index, [NotNullWhen(true)] out Solution? solution)
+    {
+        foreach(ISolver solver in solvers)
+        {
+            if (TrySolveCell(puzzle, solver, index, out solution))
+            {
+                puzzle.UpdateBoard(solution);
+                return true;
+            }
+        }
+
+        solution = null;
+        return false;
     }
 }

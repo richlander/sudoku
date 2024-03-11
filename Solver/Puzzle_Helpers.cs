@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 namespace Sudoku;
 public partial class Puzzle
 {
-
     // Board navigation
     public static IEnumerable<int> GetRowIndices(int index) => IndicesByRow.Skip(index * 9).Take(9);
 
@@ -19,8 +18,7 @@ public partial class Puzzle
         BoxByIndices[index],
         BoxRowByIndices[index],
         BoxColumnByIndices[index],
-        BoxIndices[index]
-    );
+        BoxIndices[index]);
 
     // Used by solvers that want to run once per box column/row
     public bool IsIndexFirstUnsolved(IEnumerable<int> line, int index)
@@ -49,18 +47,43 @@ public partial class Puzzle
     // Solution handling
     public static void AttachToLastSolution(Solution solution, Solution nextSolution)
     {
-        Solution? s = solution;
-        while (s.Next is not null)
+        Solution? sol = solution;
+        while (sol.Next is not null)
         {
-            s = s.Next;
+            sol = sol.Next;
         }
 
-        solution.Next = nextSolution;
+        sol.Next = nextSolution;
+    }
+
+    public static Solution UpdateSolutionWithNextSolution(Solution? firstSolution, Solution nextSolution)
+    {
+        if (firstSolution is null)
+        {
+            return nextSolution;
+        }
+
+        AttachToLastSolution(firstSolution, nextSolution);
+        return firstSolution;
     }
 
     // Board solving
+    public HashSet<int> MergeCandidates(IEnumerable<int> line)
+    {
+        HashSet<int> mergedCandidates = [];
+
+        foreach(int index in line)
+        {
+            IEnumerable<int> candidates = GetCellCandidates(index);
+            mergedCandidates.AddRange(candidates);
+        }
+
+        return mergedCandidates;
+    }
+
     // Finds unique index in line that contains a specific candidate value
-    public bool TryFindValueAppearsOnce(Cell cell, IEnumerable<int> line, int uniqueValue, out int uniqueIndex)
+    // Must visit all elements to validate constraint
+    public bool TryFindIndexForUniqueValue(Cell cell, IEnumerable<int> line, int uniqueValue, out int uniqueIndex)
     {
         uniqueIndex = -1;
         int matchIndex = -1;
@@ -80,52 +103,26 @@ public partial class Puzzle
             matchIndex = neighborIndex;
         }
 
-        uniqueIndex = matchIndex;
-        return true;
-    }
-
-    // Finds unique index in line that contains a candidate pair (and only that pair)
-    // Assumed that cell has only two candidates
-    public bool TryFindCellCandidatePairsAppearOnce(Cell cell, IEnumerable<int> line, out int uniqueIndex)
-    {
-        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
-        uniqueIndex = -1;
-        int matchIndex = -1;
-        foreach (int neighborIndex in line.Where(x => x !=cell))
+        if (matchIndex > -1)
         {
-            IReadOnlyList<int> neighborCandidates = GetCellCandidates(neighborIndex);
-            if (neighborCandidates.Count is not 2 || 
-                neighborCandidates.Intersect(cellCandidates).Count() is not 2)
-            {
-                continue;
-            }
-            
-            if (matchIndex > -1)
-            {
-                return false;
-            }
-
-            matchIndex = neighborIndex;
+            uniqueIndex = matchIndex;
+            return true;
         }
 
-        if (matchIndex is -1)
-        {
-            return false;
-        }
-
-        uniqueIndex = matchIndex;
-        return true;
+        return false;
     }
 
-    // Finds any cells in line with match of any cell candidates
-    public bool TryFindMatchingCandidates(Cell cell, IEnumerable<int> line, out Dictionary<int, List<int>>? matches)
+    // Finds candidate matches in one and only one other cell in line relative to cell
+    public bool TryFindHiddenMatchingCandidates(Cell cell, IEnumerable<int> line, [NotNullWhen(true)] out Dictionary<int, List<int>>? matches)
     {
         IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
         // index, values
         Dictionary<int, List<int>> uniqueValues = [];
+        // For each candidate, does it show up again and just once?
         foreach (int candidate in cellCandidates)
         {
-            if (TryFindValueAppearsOnce(cell, line.Where(x => x != cell), candidate, out int uniqueIndex))
+            // Add an entry for each value we find
+            if (TryFindIndexForUniqueValue(cell, line, candidate, out int uniqueIndex))
             {
                 if (!uniqueValues.TryGetValue(uniqueIndex, out List<int>? values))
                 {
@@ -137,29 +134,28 @@ public partial class Puzzle
             }
         }
 
-        if (uniqueValues.Count is 0)
+        if (uniqueValues.Count > 0)
         {
-            matches = null;
-            return false;
+            matches = uniqueValues;
+            return true;
         }
 
-        matches = uniqueValues;
-        return true;
+        matches = null;
+        return false;
     }
 
-
-    public bool TryFindUniqueCandidates(IEnumerable<int> targetLine, IEnumerable<int> homeLine, IEnumerable<int> searchLine, string solver, [NotNullWhen(true)] out Solution? solution)
+    // Finds unique candidates in targetLine relative to homeLine
+    // May return multiple candidates
+    // This is typically candidates unique in a row within a box (or similar)
+    public bool TryFindUniqueCandidatesInTargetLine(IEnumerable<int> targetLine, IEnumerable<int> homeLine, [NotNullWhen(true)] out HashSet<int>? uniqueCandidates)
     {
-        solution = null;
+        uniqueCandidates = null;
         HashSet<int> targets = new(targetLine);
-        HashSet<int> targetCandidates = new(9);
-        
-        // Unify the list of candidates
-        // Doesn't matter if a candidate shows up in one or all cells
-        foreach(int index in targets)
+        HashSet<int> targetCandidates = MergeCandidates(targetLine);
+
+        if (targetCandidates.Count is 0)
         {
-            IEnumerable<int> candidates = GetCellCandidates(index);
-            targetCandidates.AddRange(candidates);
+            return false;
         }
 
         // Filter homeLine
@@ -178,23 +174,31 @@ public partial class Puzzle
             }
         }
 
-        // We now know that the candidate is unique to targetLine within the homeLine unit
-        // Filter searchLine
-        IEnumerable<int> searchLineFiltered = searchLine.Where(x => !(targets.Contains(x) || IsCellSolved(x)));
+        uniqueCandidates = targetCandidates;
+        return true;
+    }
 
-        // targetCandidates can now be removed from the rest of the `searchLine`
-        foreach (int index in searchLineFiltered)
+    // Finds solutions in searchline using candidates that are inique in targetLine relative to homeLine
+    // This is typically candidates unique in a row within a box (or similar), which locks those candidates
+    // and allows removing them in the full row (minus the row in the box)
+    public bool TryFindSolutionWithIntersectionRemoval(IEnumerable<int> targetLine, IEnumerable<int> homeLine, IEnumerable<int> searchLine, ISolver solver, [NotNullWhen(true)] out Solution? solution)
+    {
+        solution = null;
+        if (TryFindUniqueCandidatesInTargetLine(targetLine, homeLine, out HashSet<int>? uniqueCandidates))
         {
-            IEnumerable<int> candidates = GetCellCandidates(index);
-
-            if (candidates.Intersect(targetCandidates).Any())
+            foreach (int candidate in uniqueCandidates)
             {
-                List<int> removalCandidates = candidates.Intersect(targetCandidates).ToList();
-                Solution s = new(GetCell(index), -1, removalCandidates, solver)
+                List<int> targets = targetLine.Where(x => GetCellCandidates(x).Contains(candidate)).ToList();
+                foreach (int index in searchLine.Where(x => !targetLine.Contains(x) && GetCellCandidates(x).Contains(candidate)))
                 {
-                    Next = solution
-                };
-                solution = s;
+                    Solution s = new(GetCell(index), -1, solver.Name)
+                    {
+                        RemovalCandidates = [ candidate ],
+                        AlignedIndices = targets,
+                        Next = solution
+                    };
+                    solution = s;
+                }
             }
         }
 
