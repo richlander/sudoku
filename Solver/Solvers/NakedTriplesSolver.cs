@@ -36,8 +36,9 @@ public class NakedTriplesSolver : ISolver
     {
         solution = null;
         IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
+        int candidateCount = cellCandidates.Count;
 
-        if (cellCandidates.Count is not 2)
+        if (candidateCount > 3)
         {
             return false;
         }
@@ -49,29 +50,23 @@ public class NakedTriplesSolver : ISolver
 
         foreach (IEnumerable<int> line in lines)
         {
-            // Which index has a matching pair to cell?
-            if (TryFindCandidatePairsMatchCell(puzzle, cell, line, out int uniqueIndex))
+            // Which candiates are present in other cells in unit?
+            if (TryFindCandidatePairsMatchCell(puzzle, cell, line, out Dictionary<int, List<int>>? matches))
             {
-                if (uniqueIndex < cell)
+                IEnumerable<int> twoOrThreeCount = matches.Keys.Where(x => matches[x].Count <= 3);
+                foreach (int candidate in twoOrThreeCount)
                 {
-                    continue;
-                }
+                    List<int> indices = matches[candidate];
 
-                // Remove values from other cells in line
-                foreach (int index in line.Where(x => !(puzzle.IsCellSolved(x) || x == cell || x == uniqueIndex)))
-                {
-                    IReadOnlyList<int> neighborCandidates = puzzle.GetCellCandidates(index);
+                    List<int> matchingCells = FindMatches(puzzle, cellCandidates, indices);
 
-                    if (neighborCandidates.Intersect(cellCandidates).Any())
+                    if (candidateCount is 2 && matches.Count is 2)
                     {
-                        // List<int> removals = neighborCandidates.Except(cellCandidates).ToList();
-                        Solution s = new(puzzle.GetCell(index), -1, Name)
-                        {
-                            RemovalCandidates = neighborCandidates.Intersect(cellCandidates).ToList(),
-                            AlignedCandidates = cellCandidates,
-                            AlignedIndices = [cell, uniqueIndex],
-                        };
-                        solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                        // return solution
+                    }
+                    else if (candidateCount is 3 && matches.Count is 3)
+                    {
+                        // return solution
                     }
                 }
             }
@@ -86,32 +81,86 @@ public class NakedTriplesSolver : ISolver
     }
 
     // Finds unique index in line that contains a candidate pair (and only that pair)
-    public static bool TryFindCandidatePairsMatchCell(Puzzle puzzle, Cell cell, IEnumerable<int> line, out int matchIndex)
+    public static bool TryFindCandidatePairsMatchCell(Puzzle puzzle, Cell cell, IEnumerable<int> line, [NotNullWhen(true)] out Dictionary<int, List<int>>? matches)
     {
-        Dictionary<int, List<int>> matches = [];
+        Dictionary<int, List<int>> match = [];
         IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
-        foreach (int neighborIndex in line.Where(x => x !=cell))
+        foreach (int index in line.Where(x => x !=cell && !puzzle.IsCellSolved(x)))
         {
-            IReadOnlyList<int> neighborCandidates = puzzle.GetCellCandidates(neighborIndex);
-            foreach (int match in neighborCandidates.Intersect(cellCandidates))
+            IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
+
+            if (candidates.Count > 3)
             {
-                matches 
-                return true;
+                continue;
+            }
+
+            foreach (int candidate in candidates.Intersect(cellCandidates))
+            {
+                if (!match.TryGetValue(candidate, out List<int>? indices))
+                {
+                    indices = [];
+                }
+
+                indices.Add(index);
             }
         }
 
-        matchIndex = -1;
+        if (match.Count != 0)
+        {
+            matches = match;
+            return true;
+        }
+
+        matches = null;
         return false;
+    }
+
+    private static List<int> FindMatches(Puzzle puzzle, IReadOnlyList<int> cellCandidates, List<int> indices)
+    {
+        int candidateCount = cellCandidates.Count;
+        List<int> matches = [];
+
+        foreach (int index in indices)
+        {
+            IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
+            int intersectionCount = candidates.Intersect(candidates).Count();
+            if (intersectionCount == candidateCount ||
+                intersectionCount == candidates.Count)
+            {
+                matches.Add(index);
+            }
+        }
+
+        return matches;
+    }
+
+    private static List<int> FindMatchesPartial(Puzzle puzzle, IReadOnlyList<int> baselineCandidates, List<int> indices)
+    {
+        foreach (int index in indices)
+        {
+            IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
+            if (baselineCandidates.Intersect(candidates).Count() != 0)
+            {
+                matches.Add(index);
+            }
+        }
+
     }
 }
 
 
 /*
     Algorithm:
-    - Candidate shows up only in box row or column
     - Candidate is in <= 3 cells (that's an implication of the point above)
     - Candidate is in two cells, both with two candidates, and they matches (then naked pair)
     - Candidate is in three cells, all with three candidates, and they match (then naked triple)
     - Candidate is in three cells, all with two or three candidates, all with just three candidates in total (then naked triple)
     - Candidate is in two cells, all with two candidates, all with just three candidates in total (then naked triple)
+    - The 3 candidate values can be removed from the rest of the cells in the unit
+
+    Data format:
+    - Dictionary of candidate, List of indexes
+    - If candidate list length is >3, skip
+    - If candidate list is 3, do x
+    - If candidate list is 2, do y
 */
