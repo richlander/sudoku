@@ -134,18 +134,6 @@ public class NakedTriplesSolver : ISolver
         return matches;
     }
 
-    private static List<int> FindMatchesPartial(Puzzle puzzle, IReadOnlyList<int> baselineCandidates, List<int> indices)
-    {
-        foreach (int index in indices)
-        {
-            IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
-            if (baselineCandidates.Intersect(candidates).Count() != 0)
-            {
-                matches.Add(index);
-            }
-        }
-
-    }
 }
 
 
