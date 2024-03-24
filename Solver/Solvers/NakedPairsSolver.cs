@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Xml;
 
 namespace Sudoku;
 
@@ -49,7 +50,7 @@ public class NakedPairsSolver : ISolver
         foreach (IEnumerable<int> line in lines)
         {
             // Which index has a matching pair to cell?
-            if (TryFindCandidatePairsMatchCell(puzzle, cell, line, out int uniqueIndex))
+            if (TryFindCandidatePair(puzzle, cell, line, out int uniqueIndex))
             {
                 if (uniqueIndex < cell)
                 {
@@ -85,7 +86,7 @@ public class NakedPairsSolver : ISolver
     }
 
     // Finds unique index in line that contains a candidate pair (and only that pair)
-    public static bool TryFindCandidatePairsMatchCell(Puzzle puzzle, Cell cell, IEnumerable<int> line, out int matchIndex)
+    public static bool TryFindCandidatePair(Puzzle puzzle, Cell cell, IEnumerable<int> line, out int matchIndex)
     {
         IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
         foreach (int neighborIndex in line.Where(x => x !=cell))
