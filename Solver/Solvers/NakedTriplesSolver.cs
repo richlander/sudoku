@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
 
 namespace Sudoku;
 
@@ -42,7 +43,14 @@ public class NakedTriplesSolver : ISolver
         - That's either a pair or a triple, dependending on the details.
         - Otherwise ... not a pair, and maybe a triple
         - Continue the algorithm for 3/3/2 and 2/2/2 triple forms
-
+        
+        Approach for a cell with 2 candidates:
+        - This is the most interesting scenario
+        - Do the same thing, which is to get all the partial matches
+        - This will naturally get all the cells which would be involved in 3/3/2, 3/2/2, and 2/2/2 form
+        - For each partial match, do a union on all the other matches (one at a time) + the cell
+        - If this results in 3 candidates, then we have a naked triple
+        - We can determine the form at that point
     */
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
@@ -66,34 +74,42 @@ public class NakedTriplesSolver : ISolver
             if (TryFindPartialMatchesForCellCandidates(puzzle, cell, line, out Matches matches))
             {
                 var (indexMatches, candidateMatches) = matches;
+                List<int> matchingIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count == puzzle.GetCellCandidates(x).Count && x != index) ];
+                List<int> matchingThreeIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count is 3) ];
+                List<int> matchingTwoIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count is 2 && puzzle.GetCellCandidates(x).Count is 2) ];
+
                 foreach (int index in indexMatches.Keys)
                 {
                     List<int> indexCandidates = indexMatches[index];
                     int indexCandidateCount = indexCandidates.Count;
+
+
                     // Naked pairs
                     if (candidateCount is 2)
                     {
-                        if (indexCandidateCount is 2 && puzzle.GetCellCandidates(index).Count is 2)
+                        foreach (int matchingIndex in matchingIndices)
                         {
-                            List<int> alignedIndices = [ cell, index ];
-                            if (TryFindSolution(puzzle, cellCandidates, line, alignedIndices, out Solution? s))
+                            List<int> union = cellCandidates.Union(indexCandidates).Union(indexMatches[matchingIndex]).ToList();
+                            if (union.Count is 3)
                             {
-                                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                                List<int> alignedIndices = [ cell, index, matchingIndex ];
+                                if (TryFindSolution(puzzle, cellCandidates, line, alignedIndices, out Solution? s))
+                                {
+                                    solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                                }    
                             }
                         }
+
                     }
-                    // candidateCount is 3
-                    else
+                    else if (candidateCount is 3)
                     {
-                        List<int> matchingThreeIndices = [ cell, ..indexMatches.Keys.Where(x => indexMatches[x].Count is 3) ];
-                        List<int> matchingTwoIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count is 2 && puzzle.GetCellCandidates(x).Count is 2) ];
 
                         // Naked triple of form 3/3/3
                         if (matchingThreeIndices.Count is 3)
                         {
                             List<int> alignedIndices = matchingThreeIndices;
                             bool isLowestIndex = alignedIndices.Count(x => x < index) is 1;
-                            if (isLowestIndex && TryFindSolution(puzzle, cellCandidates, line, matchingThreeIndices, out Solution? s))
+                            if (isLowestIndex && TryFindSolution(puzzle, cellCandidates, line, alignedIndices, out Solution? s))
                             {
                                 solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
                             }
