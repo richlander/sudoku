@@ -2,7 +2,6 @@
 using static System.Console;
 
 // string p = "400000938032094100095300240370609004529001673604703090957008300003900400240030709";
-
 // args = [p];
 
 if (args.Length is 0)
@@ -12,8 +11,9 @@ if (args.Length is 0)
 }
 
 List<ISolver> solvers = [
-    new HiddenSinglesSolver(), 
-    new NakedPairsSolver(), 
+    new HiddenSinglesSolver(),
+    new NakedPairsSolver(),
+    new NakedTriplesSolver(),
     new HiddenPairsSolver(),
     new PointingPairsSolver(),
     new BoxLineReductionSolver(),
