@@ -51,6 +51,7 @@ public class NakedTriplesSolver : ISolver
         - For each partial match, do a union on all the other matches (one at a time) + the cell
         - If this results in 3 candidates, then we have a naked triple
         - We can determine the form at that point
+
     */
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
@@ -58,6 +59,8 @@ public class NakedTriplesSolver : ISolver
         IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
         int candidateCount = cellCandidates.Count;
 
+        // Assumption: .Count will never be <= 1
+        // SolvedCellsSolver should protect that assumption
         if (cellCandidates.Count is > 3)
         {
             return false;
@@ -74,57 +77,64 @@ public class NakedTriplesSolver : ISolver
             if (TryFindPartialMatchesForCellCandidates(puzzle, cell, line, out Matches matches))
             {
                 var (indexMatches, candidateMatches) = matches;
-                List<int> matchingIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count == puzzle.GetCellCandidates(x).Count && x != index) ];
-                List<int> matchingThreeIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count is 3) ];
+                int indexCount = indexMatches.Count;
+                // List<int> matchingIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count == puzzle.GetCellCandidates(x).Count) ];
                 List<int> matchingTwoIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count is 2 && puzzle.GetCellCandidates(x).Count is 2) ];
+                List<int> matchingThreeIndices = [ ..indexMatches.Keys.Where(x => indexMatches[x].Count is 3) ];
 
-                foreach (int index in indexMatches.Keys)
+                /*
+
+                    Approach for candidateCount == 2
+                    - Solution: one other "two" candidate
+                    - Solution: two other "two" or "three" candidates that union (with current cell) to three candidates
+
+                    Approach for candidateCount == 3
+                    - Solution: Same as second "two" candidate solution
+                */
+
+                // Naked pair
+                if (candidateCount is 2 && matchingTwoIndices.Count is 1 &&
+                    matchingTwoIndices[0] > cell)
                 {
-                    List<int> indexCandidates = indexMatches[index];
-                    int indexCandidateCount = indexCandidates.Count;
-
-
-                    // Naked pairs
-                    if (candidateCount is 2)
+                    List<int> alignedIndices = [ cell, matchingTwoIndices[0] ];
+                    if (TryFindSolution(puzzle, cellCandidates, line, alignedIndices, out Solution? s))
                     {
-                        foreach (int matchingIndex in matchingIndices)
-                        {
-                            List<int> union = cellCandidates.Union(indexCandidates).Union(indexMatches[matchingIndex]).ToList();
-                            if (union.Count is 3)
-                            {
-                                List<int> alignedIndices = [ cell, index, matchingIndex ];
-                                if (TryFindSolution(puzzle, cellCandidates, line, alignedIndices, out Solution? s))
-                                {
-                                    solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
-                                }    
-                            }
-                        }
+                        solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                        continue;
+                    }                       
+                }
 
+                // Naked triple
+                var keys = indexMatches.Keys.ToList();
+                for (int i = 0; i < indexCount; i++)
+                {
+                    int index = keys[i];
+                    IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
+                    List<int> matchingCandidates = indexMatches[index];
+                    List<int> twoUnion = cellCandidates.Union(candidates).ToList();
+
+                    if (twoUnion.Count != 3)
+                    {
+                        continue;
                     }
-                    else if (candidateCount is 3)
-                    {
 
-                        // Naked triple of form 3/3/3
-                        if (matchingThreeIndices.Count is 3)
+                    for (int j = i + 1; j < indexCount; j++)
+                    {
+                        int nextIndex = keys[j];
+                        IReadOnlyList<int> nextCandidates = puzzle.GetCellCandidates(nextIndex);
+
+                        if (twoUnion.Union(nextCandidates).Count() != 3)
                         {
-                            List<int> alignedIndices = matchingThreeIndices;
-                            bool isLowestIndex = alignedIndices.Count(x => x < index) is 1;
-                            if (isLowestIndex && TryFindSolution(puzzle, cellCandidates, line, alignedIndices, out Solution? s))
-                            {
-                                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
-                            }
+                            continue;
                         }
-                        // Naked triple of form 3/3/2
-                        // Naked triple of form 3/2/2
-                        else if (matchingThreeIndices.Count + matchingTwoIndices.Count is 3)
+
+                        List<int> threeUnion = twoUnion.Union(nextCandidates).ToList();
+                        List<int> alignedIndices = [ cell, index, nextIndex ];
+                        if (TryFindSolution(puzzle, threeUnion, line, alignedIndices, out Solution? s))
                         {
-                            List<int> alignedIndices = [ ..matchingThreeIndices, ..matchingTwoIndices ];
-                            bool isLowestIndex = alignedIndices.Count(x => x < index) is 1;
-                            if (isLowestIndex && TryFindSolution(puzzle, cellCandidates, line, alignedIndices, out Solution? s))
-                            {
-                                solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
-                            }
-                        }
+                            solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
+                            return true;
+                        }     
                     }
                 }
             }
@@ -170,7 +180,7 @@ public class NakedTriplesSolver : ISolver
         // key: index; value: list of candidates (present at that candidate)
         Dictionary<int, List<int>> candidatesbyIndex = [];
         IReadOnlyList<int> cellCandidates = puzzle.GetCellCandidates(cell);
-        foreach (int index in line.Where(x => x != cell))
+        foreach (int index in line.Where(x => x > cell))
         {
             IReadOnlyList<int> candidates = puzzle.GetCellCandidates(index);
 
