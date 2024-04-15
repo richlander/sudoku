@@ -209,4 +209,66 @@ public partial class Puzzle
 
         return true;
     }
+
+    // Finds unique index in line that contains a candidate pair (and only that pair)
+    public bool TryFindPartialMatchesForCellCandidates(Cell cell, IEnumerable<int> line, out Matches matches)
+    {
+        // key: candidate; value: list of indexes (where that candidate is present)
+        Dictionary<int, List<int>> indicesbyCandidate = [];
+        // key: index; value: list of candidates (present at that candidate)
+        Dictionary<int, List<int>> candidatesbyIndex = [];
+        IReadOnlyList<int> cellCandidates = GetCellCandidates(cell);
+        foreach (int index in line.Where(x => x > cell))
+        {
+            IReadOnlyList<int> candidates = GetCellCandidates(index);
+
+            if (candidates.Count is 0 or > 3)
+            {
+                continue;
+            }
+
+            // Will find where intersections as low as one candidate
+            foreach (int candidate in cellCandidates.Intersect(candidates))
+            {
+                if (!candidatesbyIndex.TryGetValue(index, out List<int>? matchingCandidates))
+                {
+                    matchingCandidates = [];
+                    candidatesbyIndex.Add(index, matchingCandidates);
+                }
+
+                if (!indicesbyCandidate.TryGetValue(candidate, out List<int>? matchingIndices))
+                {
+                    matchingIndices = [];
+                    indicesbyCandidate.Add(candidate, matchingIndices);
+                }
+
+                // Records just the index since more analysis needed
+                matchingIndices.Add(index);
+                matchingCandidates.Add(candidate);
+            }
+        }
+
+        if (indicesbyCandidate.Count != 0 && candidatesbyIndex.Count != 0)
+        {
+            matches = new(candidatesbyIndex, indicesbyCandidate);
+            return true;
+        }
+
+        matches = new();
+        return false;
+    }
+
+    public int CountSolvedCells(IEnumerable<int> line)
+    {
+        int count = 0;
+        foreach (int index in line)
+        {
+            if (_board[index] > 0)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
 }
