@@ -1,7 +1,7 @@
 ﻿using Sudoku;
 using static System.Console;
 
-// string p = "400000938032094100095300240370609004529001673604703090957008300003900400240030709";
+// string p = "000001030231090000065003100678924300103050006000136700009360570006019843300000000";
 // args = [p];
 
 if (args.Length is 0)
@@ -15,6 +15,7 @@ List<ISolver> solvers = [
     new NakedPairsSolver(),
     new NakedTriplesSolver(),
     new HiddenPairsSolver(),
+    new HiddenTriplesSolver(),
     new PointingPairsSolver(),
     new BoxLineReductionSolver(),
     new XWingSolver()];
