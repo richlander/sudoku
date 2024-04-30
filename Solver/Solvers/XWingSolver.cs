@@ -92,8 +92,8 @@ public class XWingSolver : ISolver
                         if (Puzzle.RowByIndices[lowerLeftIndex] == Puzzle.RowByIndices[lowerRightIndex])
                         {
                             // Still have to find candidates to remove
-                            IEnumerable<int> lowRowCandidates = Puzzle.GetRowIndices(cell.Row).Where(x => x != lowerLeftIndex && x != lowerRightIndex && puzzle.GetCellCandidates(x).Contains(candidate));
-                            IEnumerable<int> highRowCandidates = Puzzle.GetRowIndices(higherRightCell.Row).Where(x => x != higherLeftIndex && x != higherRightIndex && puzzle.GetCellCandidates(x).Contains(candidate));
+                            IEnumerable<int> lowRowCandidates = Puzzle.GetRowIndices(cell.Row).Where(x => !(x == lowerLeftIndex || x == lowerRightIndex) && puzzle.GetCellCandidates(x).Contains(candidate));
+                            IEnumerable<int> highRowCandidates = Puzzle.GetRowIndices(higherRightCell.Row).Where(x => !(x == higherLeftIndex || x == higherRightIndex) && puzzle.GetCellCandidates(x).Contains(candidate));
 
                             List<int> finalList = [];
                             finalList.AddRange(lowRowCandidates);
@@ -165,8 +165,8 @@ public class XWingSolver : ISolver
                         if (Puzzle.ColumnByIndices[lowerLeftIndex] == Puzzle.ColumnByIndices[higherLeftIndex])
                         {
                             // Still have to find candidates to remove
-                            IEnumerable<int> leftColumnCandidates = Puzzle.GetColumnIndices(cell.Column).Where(x => x != lowerLeftIndex && x != lowerRightIndex && puzzle.GetCellCandidates(x).Contains(candidate));
-                            IEnumerable<int> rightColumnCandidates = Puzzle.GetColumnIndices(higherRightCell.Column).Where(x => x != lowerRightIndex && x != higherRightIndex && puzzle.GetCellCandidates(x).Contains(candidate));
+                            IEnumerable<int> leftColumnCandidates = Puzzle.GetColumnIndices(cell.Column).Where(x => !(x == lowerLeftIndex || x == higherLeftIndex) && puzzle.GetCellCandidates(x).Contains(candidate));
+                            IEnumerable<int> rightColumnCandidates = Puzzle.GetColumnIndices(higherRightCell.Column).Where(x => !(x == lowerRightIndex || x == higherRightIndex) && puzzle.GetCellCandidates(x).Contains(candidate));
 
                             List<int> finalList = [];
                             finalList.AddRange(leftColumnCandidates);
