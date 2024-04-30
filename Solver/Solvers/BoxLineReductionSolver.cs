@@ -7,6 +7,8 @@ public class BoxLineReductionSolver : ISolver
 {
     public string Name => nameof(BoxLineReductionSolver);
 
+    public bool IsTough => false;
+
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
         solution = null;

@@ -9,6 +9,8 @@ public class PointingPairsSolver : ISolver
 {
     public string Name => nameof(PointingPairsSolver);
 
+    public bool IsTough => false;
+
     /*
         Pointing pairs: The same candidate shows up in one line or column within a box and not elswhere.
         This is another "hidden" pattern.

@@ -4,7 +4,9 @@ namespace Sudoku;
 
 public class NakedPairsSolver : ISolver
 {
-        public string Name => nameof(NakedPairsSolver);
+    public string Name => nameof(NakedPairsSolver);
+
+    public bool IsTough => false;
 
     /*
         Naked pairs: matching pairs are locked and allow removal of candidates from other cells in the same unit

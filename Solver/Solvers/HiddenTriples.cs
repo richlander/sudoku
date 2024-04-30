@@ -6,7 +6,9 @@ namespace Sudoku;
 
 public class HiddenTriplesSolver : ISolver
 {
-        public string Name => nameof(HiddenTriplesSolver);
+    public string Name => nameof(HiddenTriplesSolver);
+
+    public bool IsTough => false;
 
     /*
         Hidden triple: Three candidates are hiding among other candidates in three cells.

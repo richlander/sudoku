@@ -4,7 +4,10 @@ namespace Sudoku;
 
 public class SolvedCellsSolver : ISolver
 {
-        public string Name => nameof(SolvedCellsSolver);
+    public string Name => nameof(SolvedCellsSolver);
+
+    public bool IsTough => false;
+
 
     /*
         Solved cell: This could be called "naked single", because there is only one candidate left.

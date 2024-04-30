@@ -8,6 +8,8 @@ public class HiddenSinglesSolver : ISolver
 {
     public string Name => nameof(HiddenSinglesSolver);
 
+    public bool IsTough => false;
+
     /*
         Hidden singles: A candidate value that is absent from all other cells in unit (box, row or column).
         Naked singles are a candidate set of 1 (and can be solved with "SolvedCellSolver").
