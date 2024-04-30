@@ -9,16 +9,13 @@ public static class Solver
 {
     public static IEnumerable<Solution> Solve(Puzzle puzzle, IReadOnlyList<ISolver> solvers)
     {
-        SolvedCellsSolver solvedCellsSolver = new();
-        SolverPlaylist playlist = new(solvers);
         Solution? solution = null;
 
         do
         {
-            playlist.Add(solvedCellsSolver);
             solution = null;
 
-            foreach(ISolver solver in playlist.Play())
+            foreach(ISolver solver in solvers)
             {
                 // Search for solutions across board
                 for (int i = 0; i < 81; i++)
@@ -26,14 +23,13 @@ public static class Solver
                     if (TrySolveCell(puzzle, solver, i, out Solution? s))
                     {
                         solution = Puzzle.UpdateSolutionWithNextSolution(solution, s);
-                        if (puzzle.IsSolved)
+                        if (solver.IsTough || puzzle.IsSolved)
                         {
                             break;    
                         }
                     }
                 }
 
-                // Need to run SolverCellsSolver next
                 if (solution is not null)
                 {
                     yield return solution;

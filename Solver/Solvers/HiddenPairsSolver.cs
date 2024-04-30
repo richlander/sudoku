@@ -9,6 +9,8 @@ public class HiddenPairsSolver : ISolver
 {
     public string Name => nameof(HiddenPairsSolver);
 
+    public bool IsTough => false;
+
     /*
         Hidden pairs: A pair of candidate values that is absent from all other cells in unit (box, row or column).
         Naked pairs are a candidate set of 2, hence immediately visible.

@@ -4,7 +4,9 @@ namespace Sudoku;
 
 public class NakedTriplesSolver : ISolver
 {
-        public string Name => nameof(NakedTriplesSolver);
+    public string Name => nameof(NakedTriplesSolver);
+
+    public  bool IsTough => false;
 
     /*
         Naked triples: matching tiples are three locked cells that contain (in aggregate) the same three candidates and allow removal of those candidates from other cells in the same unit

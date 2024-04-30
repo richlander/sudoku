@@ -1,14 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Linq.Expressions;
-using System.Security.Principal;
-using System.Transactions;
 
 namespace Sudoku;
 
 public class XWingSolver : ISolver
 {
-        public string Name => nameof(XWingSolver);
+    public string Name => nameof(XWingSolver);
+
+    public bool IsTough => true;
 
     /*
         This is like an elaborate version of (double) pointed pairs

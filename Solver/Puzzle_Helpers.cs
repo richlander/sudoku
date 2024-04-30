@@ -271,4 +271,13 @@ public partial class Puzzle
 
         return count;
     }
+
+    public static List<IEnumerable<int>> GetLinesForCell(Cell cell) =>
+        [
+            Puzzle.GetRowIndices(cell.Row),
+            Puzzle.GetColumnIndices(cell.Column),
+            Puzzle.GetBoxIndices(cell.Box),
+        ];
+
+    public static int GetIndexForRowColumn(int row, int column) => row * 9 + column;
 }
