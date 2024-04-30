@@ -1,9 +1,6 @@
 ﻿using Sudoku;
 using static System.Console;
 
-// string p = "900040000000600031020000090000700020002935600070002000060000073510009000000080009";
-// args = [p];
-
 if (args.Length is 0)
 {
     WriteLine("Provide a puzzle or puzzle file as input.");
