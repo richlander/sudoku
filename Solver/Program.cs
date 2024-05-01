@@ -18,6 +18,7 @@ List<ISolver> solvers = [
     new BoxLineReductionSolver(),
     new XWingSolver(),
     new YWingSolver(),
+    new XYZWingSolver(),
     ];
 
 string input = args[0];
