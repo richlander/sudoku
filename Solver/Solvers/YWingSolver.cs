@@ -74,8 +74,8 @@ public class YWingSolver : ISolver
                                         AlignedIndices = [cell, pincerOne, pincerTwo],
                                         AlignedCandidates = yWingCandidates,
                                         RemovalCandidates = [value],
+                                        Next = solution
                                     };
-                                    s.Next = solution;
                                     solution = s;
                                 }
                             }
@@ -132,9 +132,6 @@ public class YWingSolver : ISolver
             yield return cellIndex;
             yield break;
         }
-
-        int cellOneBoxColumnStart = Puzzle.BoxFirstCellIndices[cellOne.Box];
-        int cellTwoBoxColumnStart = Puzzle.BoxFirstCellIndices[cellTwo.Box];
 
         int cellOneBoxColumn = cellOne.Box % 3;
         int cellOneBoxRow = cellOne.Box / 3;

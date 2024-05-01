@@ -11,14 +11,14 @@ public class XYZWingSolver : ISolver
     public bool TrySolve(Puzzle puzzle, Cell cell, [NotNullWhen(true)] out Solution? solution)
     {
         /*
-            YWing is a mix of naked triples (2/2/2 variant), pointed pairs, and 3/4ers of an XWing.
-            It requires three cells, each with a different two candidates, that union to three candidates.
-            One cell (the trunk of the Y) can see the other two cells (same column or box).
+            YWZing is a mix of naked triples (3/2/2 variant), pointed pairs, and 3/4ers of an XWing.
+            It requires three cells, one with three candidates (the hinge), and then two others with
+            two of those three candidates.
+            One cell (the hinge cell) can see the other two cells (same column/row or box).
             The other two cannot see each other (not in the same box, column, or two).
 
             Whatever is the common candidate in the two ends of the Y, that candidate can be removed
-            from every cell those two cells can both see.
-            This candidate will not be in the trunk Y cell (by construction), so no issues there.
+            from every cell all three cells can see.
         */
 
         solution = null;
@@ -45,6 +45,12 @@ public class XYZWingSolver : ISolver
                     foreach (int pincerTwo in GetPincersInLine(puzzle, cell, cellCandidates, lines[lineTwo]))
                     {
                         Cell pincerTwoCell = Puzzle.GetCellForIndex(pincerTwo);
+
+                        if (cell.Box != pincerOneCell.Box &&
+                            cell.Box != pincerTwoCell.Box)
+                            {
+                                continue;
+                            } 
 
                         if (pincerOneCell.Box == pincerTwoCell.Box ||
                             pincerOneCell.Row == pincerTwoCell.Row ||
