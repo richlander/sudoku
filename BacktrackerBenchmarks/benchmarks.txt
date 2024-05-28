@@ -1,0 +1,97 @@
+// * Summary *
+
+BenchmarkDotNet v0.13.12, macOS Sonoma 14.4.1 (23E224) [Darwin 23.4.0]
+Apple M1, 1 CPU, 8 logical and 8 physical cores
+.NET SDK 9.0.100-preview.6.24274.13
+  [Host]     : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+  DefaultJob : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+
+
+| Method                    | Board     | Mean      | Error    | StdDev   |
+|-------------------------- |---------- |----------:|---------:|---------:|
+| BacktrackerBaseline       | Int32[81] | 219.93 us | 3.186 us | 2.824 us |
+| BacktrackerDataOriented   | Int32[81] |  67.61 us | 0.940 us | 0.833 us |
+| BacktrackerCandidateBytes | Int32[81] |  28.70 us | 0.283 us | 0.250 us |
+
+// * Summary *
+
+BenchmarkDotNet v0.13.12, macOS Sonoma 14.4.1 (23E224) [Darwin 23.4.0]
+Apple M1, 1 CPU, 8 logical and 8 physical cores
+.NET SDK 9.0.100-preview.6.24274.13
+  [Host]     : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+  DefaultJob : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+
+
+| Method                    | Board     | Mean      | Error    | StdDev   |
+|-------------------------- |---------- |----------:|---------:|---------:|
+| BacktrackerBaseline       | Int32[81] | 219.96 us | 3.858 us | 3.012 us |
+| BacktrackerDataOriented   | Int32[81] |  65.59 us | 0.513 us | 0.480 us |
+| BacktrackerCandidateBytes | Int32[81] |  29.17 us | 0.025 us | 0.023 us |
+| BacktrackerQuick          | Int32[81] |  37.72 us | 0.123 us | 0.115 us |
+
+// * Summary *
+
+BenchmarkDotNet v0.13.12, macOS Sonoma 14.4.1 (23E224) [Darwin 23.4.0]
+Apple M1, 1 CPU, 8 logical and 8 physical cores
+.NET SDK 9.0.100-preview.6.24274.13
+  [Host]     : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+  DefaultJob : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+
+
+| Method                    | Board     | Mean      | Error    | StdDev   |
+|-------------------------- |---------- |----------:|---------:|---------:|
+| BacktrackerBaseline       | Int32[81] | 217.74 us | 1.462 us | 1.368 us |
+| BacktrackerDataOriented   | Int32[81] |  65.87 us | 0.278 us | 0.246 us |
+| BacktrackerCandidateBytes | Int32[81] |  28.45 us | 0.046 us | 0.043 us |
+| BacktrackerQuick          | Int32[81] |  37.49 us | 0.075 us | 0.067 us |
+
+BenchmarkDotNet v0.13.12, macOS Sonoma 14.4.1 (23E224) [Darwin 23.4.0]
+Apple M1, 1 CPU, 8 logical and 8 physical cores
+.NET SDK 9.0.100-preview.6.24274.13
+  [Host]     : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+  DefaultJob : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+
+
+| Method                    | Board     | Mean      | Error    | StdDev   |
+|-------------------------- |---------- |----------:|---------:|---------:|
+| BacktrackerBaseline       | Int32[81] | 219.19 us | 1.071 us | 1.002 us |
+| BacktrackerDataOriented   | Int32[81] |  65.82 us | 0.249 us | 0.233 us |
+| BacktrackerCandidateBytes | Int32[81] |  23.68 us | 0.055 us | 0.049 us |
+| BacktrackerQuick          | Int32[81] |  33.27 us | 0.093 us | 0.083 us |
+
+// * Summary *
+
+BenchmarkDotNet v0.13.12, macOS Sonoma 14.4.1 (23E224) [Darwin 23.4.0]
+Apple M1, 1 CPU, 8 logical and 8 physical cores
+.NET SDK 9.0.100-preview.6.24274.13
+  [Host]     : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+  DefaultJob : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+
+
+| Method                    | Board     | Mean       | Error     | StdDev    |
+|-------------------------- |---------- |-----------:|----------:|----------:|
+| BacktrackerBaseline       | Int32[81] | 226.084 us | 0.7766 us | 0.7264 us |
+| BacktrackerDataOriented   | Int32[81] |  64.811 us | 0.1910 us | 0.1693 us |
+| BacktrackerCandidateBytes | Int32[81] |  22.507 us | 0.0467 us | 0.0414 us |
+| BacktrackerQuick          | Int32[81] |   9.830 us | 0.0320 us | 0.0284 us |
+
+// * Summary *
+
+BenchmarkDotNet v0.13.12, macOS Sonoma 14.4.1 (23E224) [Darwin 23.4.0]
+Apple M1, 1 CPU, 8 logical and 8 physical cores
+.NET SDK 9.0.100-preview.6.24274.13
+  [Host]     : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+  DefaultJob : .NET 9.0.0 (9.0.24.27202), Arm64 RyuJIT AdvSIMD
+
+
+| Method                    | Board     | Mean              | Error           | StdDev         |
+|-------------------------- |---------- |------------------:|----------------:|---------------:|
+| BacktrackerBaseline       | Int32[81] |        220.089 us |       0.9355 us |      0.8293 us |
+| BacktrackerBaseline       | Int32[81] | 23,255,386.416 us | 113,462.7842 us | 94,746.5635 us |
+| BacktrackerDataOriented   | Int32[81] |         73.746 us |       0.4158 us |      0.3686 us |
+| BacktrackerDataOriented   | Int32[81] |  6,286,733.478 us |   7,164.1347 us |  6,701.3360 us |
+| BacktrackerCandidateBytes | Int32[81] |         22.366 us |       0.1192 us |      0.0995 us |
+| BacktrackerCandidateBytes | Int32[81] |  1,747,724.676 us |   3,336.8801 us |  2,958.0573 us |
+| BacktrackerQuick          | Int32[81] |          9.787 us |       0.0530 us |      0.0496 us |
+| BacktrackerQuick          | Int32[81] |    415,175.789 us |     965.4809 us |    855.8736 us |
+

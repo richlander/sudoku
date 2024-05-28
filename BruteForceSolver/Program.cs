@@ -5,21 +5,23 @@ using Sudoku;
 Stopwatch stopwatch= Stopwatch.StartNew();
 string puzzle = "003020600900305001001806400008102900700000008006708200002609500800203009005010300";
 int[] board = new int[81];
+Cell[] boardCells = new Cell[81];
 
 HashSet<int> cells = new(10);
 
 for (int i = 0; i < 81; i++)
 {
     board[i] = puzzle[i] - '0';
+    boardCells[i] = Puzzle.GetCellForIndex(i);
 }
 
-if (!ValidateBoard())
+if (!ValidateBoard(board))
 {
     Console.WriteLine("Puzzle is invalid");
     return;
 }
 
-if (Solver(0))
+if (Solver(board, boardCells, 0))
 {
     Console.WriteLine("Puzzle is valid.");
     PrintBoard(board);
@@ -30,31 +32,40 @@ else
 }
 
 stopwatch.Stop();
-Console.WriteLine($"Time Elapsed (ms): {stopwatch.Elapsed.Milliseconds}");
+Console.WriteLine($"Time Elapsed (ms): {stopwatch.Elapsed.TotalMilliseconds}");
 
-bool Solver(int index)
+bool Solver(Span<int> board, Cell[] boardCells, int index)
 {
     if (board[index] > 0)
     {
-        return index is 80 || Solver(index + 1);
+        return index is 80 || Solver(board, boardCells, index + 1);
     }
 
-    Cell cell = Puzzle.GetCellForIndex(index);
+    Cell cell = boardCells[index];
 
-    while (board[index] < 9)
+    bool[] values = GetLegalValues(board, cell);
+    int internalIndex = 0;
+
+    while (internalIndex < 9)
     {
-        board[index]++;
-    
-        if (IsValidRow(cell.Row) &&
-            IsValidColumn(cell.Column) && 
-            IsValidBox(cell.Box))
+        internalIndex++;
+
+        if (values[internalIndex])
         {
-            if (index is 80 && ValidateBoard())
+            continue;
+        }
+
+        board[index] = internalIndex;
+        // Console.WriteLine($"Index: {index}; Value: {board[index]}");
+    
+        if (IsValidForCell(board, cell))
+        {
+            if (index is 80 && ValidateBoard(board))
             {
                 return true;
             }
 
-            if (Solver(index + 1))
+            if (Solver(board, boardCells, index + 1))
             {
                 return true;
             }
@@ -65,11 +76,51 @@ bool Solver(int index)
     return false;
 }
 
-bool ValidateBoard()
+bool[] GetLegalValues(Span<int> board, Cell cell)
+{
+    bool[] values = new bool[10];
+    foreach (int value in board.Slice(cell.Row * 9, 9))
+    {
+        if (value is 0)
+        {
+            continue;
+        }
+
+        if (!values[value])
+        {
+            values[value] = true;
+        }
+    }
+
+    int offset = cell.Column;
+    for (int i = 0; i < 9; i++)
+    {
+        int value = board[offset];
+        if (!values[value])
+        {
+            values[value] = true;
+        }
+        offset += 9;
+    }
+
+    Span<int> indices = Puzzle.IndicesByBox.AsSpan(cell.Box * 9, 9);
+    foreach (int index in indices)
+    {
+        int value = board[index];
+        if (!values[value])
+        {
+            values[value] = true;
+        }
+    }
+
+    return values;
+}
+
+bool ValidateBoard(Span<int> board)
 {
     for (int i = 0; i < 9; i++)
     {
-        if (!IsValid(i))
+        if (!IsValid(board, i))
         {
             return false;
         }
@@ -78,13 +129,15 @@ bool ValidateBoard()
     return true;
 }
 
-bool IsValid(int index) => IsValidRow(index) && IsValidColumn(index) && IsValidBox(index);
+bool IsValidForCell(Span<int> board, Cell cell) => IsValidRow(board, cell.Row) && IsValidColumn(board, cell.Column) && IsValidBox(board, cell.Box);
 
-bool IsValidRow(int index)
+bool IsValid(Span<int> board, int index) => IsValidRow(board, index) && IsValidColumn(board, index) && IsValidBox(board, index);
+
+bool IsValidRow(Span<int> board, int index)
 {
     cells.Clear();
     int offset = index * 9;
-    Span<int> range = board.AsSpan(offset, 9);
+    Span<int> range = board.Slice(offset, 9);
     foreach (int value in range)
     {
         if (!(value is 0 || cells.Add(value)))
@@ -96,7 +149,7 @@ bool IsValidRow(int index)
     return true;
 }
 
-bool IsValidColumn(int index)
+bool IsValidColumn(Span<int> board, int index)
 {
     cells.Clear();
     int offset = index;
@@ -113,7 +166,7 @@ bool IsValidColumn(int index)
     return true;
 }
 
-bool IsValidBox(int index)
+bool IsValidBox(Span<int> board, int index)
 {
     cells.Clear();
     Span<int> indices = Puzzle.IndicesByBox.AsSpan(index * 9, 9);
@@ -129,7 +182,7 @@ bool IsValidBox(int index)
     return true;
 }
 
-void PrintBoard(int[] b)
+void PrintBoard(Span<int> b)
 {
     StringBuilder builder = new(81);
 
