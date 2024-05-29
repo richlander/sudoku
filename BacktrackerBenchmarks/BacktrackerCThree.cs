@@ -1,19 +1,25 @@
+using System.Diagnostics.CodeAnalysis;
 using Sudoku;
 
-namespace BacktrackerTwo;
+namespace BacktrackerThree;
 
+/*
+    Backtracker, based on array, collection, and span data types.
+    Adds use of representing all values in view as an int (with bitmasks).
+*/
 public static class Backtracker
 {
-    public static bool Solve(ReadOnlySpan<int> puzzleInput, out int[]? solution)
+    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[]? solution)
     {
-        Puzzle puzzle = new(puzzleInput.ToArray());
-        solution = puzzle.Board;
-        if (!ValidateBoard(puzzle.Board))
+        if (!ValidateBoard(board))
         {
+            solution = null;
             return false;
         }
 
-        return Solver(puzzle, 0);
+        solution = [ ..board ];
+        Puzzle puzzle = new(solution);
+        return Solver(puzzle, 0) && ValidateBoard(solution, true);
     }
 
     private static bool Solver(Puzzle puzzle, int index)
@@ -21,21 +27,27 @@ public static class Backtracker
         Span<int> board = puzzle.Board;
         if (board[index] > 0)
         {
-            return index is 80 && ValidateBoard(board) || Solver(puzzle, index + 1);
+            return index is 80 || Solver(puzzle, index + 1);
         }
 
         Cell cell = puzzle.Cells[index];
+        int viewValues = puzzle.GetValuesInView(cell);
+        int valuesMask = 1;
 
-        foreach (int candidate in puzzle.GetCandidates(cell))
+        for (int i = 1; i < 10; i++)
         {
-            board[index] = candidate;
+            bool valueFound = (viewValues & valuesMask) > 0;
+            valuesMask <<= 1;
 
-            if (index is 80)
+            if (valueFound)
             {
-                return ValidateBoard(board);
+                continue;
             }
-            
-            if (Solver(puzzle, index + 1))
+
+            board[index] = i;
+
+            if (index is 80 ||
+                Solver(puzzle, index + 1))
             {
                 return true;
             }
@@ -45,8 +57,18 @@ public static class Backtracker
         return false;
     }
 
-    private static bool ValidateBoard(ReadOnlySpan<int> board)
+    private static bool ValidateBoard(ReadOnlySpan<int> board, bool testForEmpties = false)
     {
+        if (board.Length != 81)
+        {
+            return false;
+        }
+
+        if (testForEmpties && board.Contains(0))
+        {
+            return false;
+        }
+
         for (int i = 0; i < 9; i++)
         {
             if (!IsValid(board, i))
@@ -58,16 +80,18 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValid(ReadOnlySpan<int> board, int index) => IsValidRow(board, index) && IsValidColumn(board, index) && IsValidBox(board, index);
+    private static bool IsValid(ReadOnlySpan<int> board, int index) => 
+        IsValidRow(board, index) && 
+        IsValidColumn(board, index) && 
+        IsValidBox(board, index);
 
     private static bool IsValidRow(ReadOnlySpan<int> board, int index)
     {
-        HashSet<int> cells = new(10);
         int offset = index * 9;
         ReadOnlySpan<int> range = board.Slice(offset, 9);
-        foreach (int value in range)
+        for (int i = 1; i < 10; i++)
         {
-            if (!(value is 0 || cells.Add(value)))
+            if (range.Count(i) > 1)
             {
                 return false;
             }

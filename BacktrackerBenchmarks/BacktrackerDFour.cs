@@ -1,10 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
 using Sudoku;
+using Puzzle = PuzzleQuick.Puzzle;
 
 namespace BacktrackerFour;
 
 public static class Backtracker
 {
-    public static bool Solve(ReadOnlySpan<int> board, out int[]? solution)
+    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[]? solution)
     {
         if (!ValidateBoard(board))
         {
@@ -13,14 +15,12 @@ public static class Backtracker
         }
 
         Puzzle puzzle = new(board);
-
-        return Solver(puzzle, board, 0, out solution) && ValidateBoard(solution);
+        return Solver(puzzle, board, 0, out solution) && ValidateBoard(solution, true);
     }
 
     private static bool Solver(Puzzle puzzle, ReadOnlySpan<int> board, int index, out int[]? solution)
     {
         solution = null;
-
         if (board[index] > 0)
         {
             if (index is 80)
@@ -44,14 +44,14 @@ public static class Backtracker
         }
 
         Cell cell = puzzle.Cells[index];
-        int candidates = puzzle.GetCandidates(cell);
+        int viewValues = puzzle.GetValuesInView(cell);
         int oldValue = 0;
-        int candidateMask = 1;
+        int valuesMask = 1;
 
         for (int i = 1; i < 10; i++)
         {
-            bool found = (candidates & candidateMask) > 0;
-            candidateMask <<= 1;
+            bool found = (viewValues & valuesMask) > 0;
+            valuesMask <<= 1;
 
             if (found)
             {
@@ -83,20 +83,18 @@ public static class Backtracker
         return false;
     }
 
-    private static IEnumerable<int> GetCandidates(int candidates)
+    private static bool ValidateBoard(ReadOnlySpan<int> board, bool testForEmpties = false)
     {
-        for (int i = 1; i < 10; i++)
+        if (board.Length != 81)
         {
-            var result = candidates & PuzzleData.Masks[i];
-            if (result > 0)
-            {
-                yield return i;
-            }
+            return false;
         }
-    }
 
-    private static bool ValidateBoard(ReadOnlySpan<int> board)
-    {
+        if (testForEmpties && board.Contains(0))
+        {
+            return false;
+        }
+
         for (int i = 0; i < 9; i++)
         {
             if (!IsValid(board, i))
@@ -108,36 +106,29 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValid(ReadOnlySpan<int> board, int index) => IsValidRow(board, index) && IsValidColumn(board, index) && IsValidBox(board, index);
+    private static bool IsValid(ReadOnlySpan<int> board, int index) => 
+        IsValidRowStride(board, index * 9) && 
+        IsValidRowStride(board, index, 9) && 
+        IsValidBox(board, index);
 
-    private static bool IsValidRow(ReadOnlySpan<int> board, int index)
+    private static bool IsValidRowStride(ReadOnlySpan<int> board, int index, int stride = 1)
     {
-        HashSet<int> cells = new(10);
-        int offset = index * 9;
-        ReadOnlySpan<int> range = board.Slice(offset, 9);
-        foreach (int value in range)
-        {
-            if (!(value is 0 || cells.Add(value)))
-            {
-                return false;
-            }
-        }
+        int bitMask = 0;
 
-        return true;
-    }
-
-    private static bool IsValidColumn(ReadOnlySpan<int> board, int index)
-    {
-        HashSet<int> cells = new(10);
-        int offset = index;
         for (int i = 0; i < 9; i++)
         {
-            int value = board[offset];
-            if (!(value is 0 || cells.Add(value)))
+            int value = board[index + i * stride];
+            if (value is 0)
+            {
+                continue;
+            }
+
+            int bit = 1 << value;
+            bitMask ^= bit;
+            if ((bitMask & bit) == 0)
             {
                 return false;
             }
-            offset += 9;
         }
 
         return true;
@@ -145,11 +136,17 @@ public static class Backtracker
 
     private static bool IsValidBox(ReadOnlySpan<int> board,  int index)
     {
-        HashSet<int> cells = new(10);
-        foreach (int cell in Puzzle.GetBoxIndices(index))
+        int bitMask = 0;
+        foreach (int value in Puzzle.GetBoxIndices(index))
         {
-            int value = board[cell];
-            if (!(value is 0 || cells.Add(value)))
+            if (value is 0)
+            {
+                continue;
+            }
+
+            int bit = 1 << value;
+            bitMask ^= bit;
+            if ((bitMask & bit) == 0)
             {
                 return false;
             }

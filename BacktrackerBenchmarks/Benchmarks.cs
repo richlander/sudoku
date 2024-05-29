@@ -4,17 +4,17 @@ using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 public class BacktrackerBenchmarks
 {
     [ParamsSource(nameof(Boards))]
-    public int[]? Board { get; set; }
+    public int[] Board { get; set; } = [];
 
     public static IEnumerable<int[]> Boards => PuzzleSource.GetPuzzles();
 
-    [Benchmark]
-    public bool BacktrackerBaseline() => Backtracker.BacktrackerOne.Solve(Board, out int[]? solution);
+    // [Benchmark]
+    public bool BacktrackerBaseline() => BacktrackerOne.Backtracker.Solve(Board, out int[]? solution);
     
-    [Benchmark]
+    // [Benchmark]
     public bool BacktrackerDataOriented() => BacktrackerTwo.Backtracker.Solve(Board, out int[]? solution);
 
-    [Benchmark]
+    // [Benchmark]
     public bool BacktrackerCandidateBytes() => BacktrackerThree.Backtracker.Solve(Board, out int[]? solution);
 
     [Benchmark]

@@ -8,8 +8,6 @@ public class Puzzle(int[] board)
 
     public int[] Board { get; } = board;
 
-    public static ReadOnlySpan<int> GetRowIndices(int index) => PuzzleData.IndicesByRow.AsSpan().Slice(index * 9, 9);
-
     public static ReadOnlySpan<int> GetColumnIndices(int index) => PuzzleData.IndicesByColumn.AsSpan().Slice(index * 9, 9);
 
     public static ReadOnlySpan<int> GetBoxIndices(int index) => PuzzleData.IndicesByBox.AsSpan().Slice(index * 9, 9);
@@ -67,18 +65,18 @@ public class Puzzle(int[] board)
         return cellCandidates;
     }
 
-    public int GetCandidatesQuick(Cell cell)
+    public int GetValuesInView(Cell cell)
     {
         var rowValues = GetRowValues(cell.Row);
         var columnValues = GetColumnValues(cell.Column, stackalloc int[9]);
         var boxValues = GetBoxValues(cell.Box, stackalloc int[9]);
         int candidates = 0;
 
-        RemoveCandidates(ref candidates, rowValues);
-        RemoveCandidates(ref candidates, columnValues);
-        RemoveCandidates(ref candidates, boxValues);
+        AddValues(ref candidates, rowValues);
+        AddValues(ref candidates, columnValues);
+        AddValues(ref candidates, boxValues);
 
-        static void RemoveCandidates(ref int candidates, ReadOnlySpan<int> values)
+        static void AddValues(ref int candidates, ReadOnlySpan<int> values)
         {
             foreach (int value in values)
             {
@@ -88,30 +86,10 @@ public class Puzzle(int[] board)
                 }
 
                 candidates |= PuzzleData.Masks[value];
-
-                // if ((candidates & PuzzleData.Masks[value]) is 0)
-                // {
-                //     candidates |= PuzzleData.Masks[value];
-                // }
             }
         }
 
         return candidates;
-    }
-
-    private static List<int>[] GenerateCandidates()
-    {
-        ReadOnlySpan<int> template = [ 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8, 9 ];
-        List<int>[] boardCandidates = new List<int>[81];
-
-        for (int i = 0; i < 81; i++)
-        {
-            List<int> candidates = [ ..template ];
-            boardCandidates[i] = candidates;
-            
-        }
-
-        return boardCandidates;
     }
 
     public static Cell[] GetCells()

@@ -1,7 +1,7 @@
 using Sudoku;
 using Microsoft.Diagnostics.Tracing.StackSources;
 
-namespace BacktrackerFour;
+namespace PuzzleQuick;
 
 public class Puzzle(ReadOnlySpan<int> board)
 {
@@ -13,11 +13,12 @@ public class Puzzle(ReadOnlySpan<int> board)
 
     public int[] BoardBoxes { get; } = GetBoardBoxes(board);
 
-    public static ReadOnlySpan<int> GetRowIndices(int index) => PuzzleData.IndicesByRow.AsSpan().Slice(index * 9, 9);
-
-    public static ReadOnlySpan<int> GetColumnIndices(int index) => PuzzleData.IndicesByColumn.AsSpan().Slice(index * 9, 9);
-
     public static ReadOnlySpan<int> GetBoxIndices(int index) => PuzzleData.IndicesByBox.AsSpan().Slice(index * 9, 9);
+
+    public int GetValuesInView(Cell cell) => 
+        BoardRows[cell.Row] |
+        BoardColumns[cell.Column] |
+        BoardBoxes[cell.Box];
 
     public void UpdateCell(Cell cell, int oldValue, int value)
     {
@@ -36,102 +37,43 @@ public class Puzzle(ReadOnlySpan<int> board)
         }
     }
 
-    public int ReadRow(int index) => BoardRows[index];
-
-    public void WriteRowValue(int index, int value)
+    private void WriteRowValue(int index, int value)
     {
-        int row = BoardRows[index];
+        ref int row = ref BoardRows[index];
         row |= PuzzleData.Masks[value];
-        BoardRows[index] = row;
     }
 
-    public void UnWriteRowValue(int index, int value)
+    private void UnWriteRowValue(int index, int value)
     {
-        int row = BoardRows[index];
+        ref int row = ref BoardRows[index];
         row ^= PuzzleData.Masks[value];
-        BoardRows[index] = row;
     }
 
-    public int ReadColumn(int index) => BoardColumns[index];
-
-    public void WriteColumnValue(int index, int value)
+    private void WriteColumnValue(int index, int value)
     {
-        int column = BoardColumns[index];
+        ref int column = ref BoardColumns[index];
         column |= PuzzleData.Masks[value];
-        BoardColumns[index] = column;
     }
 
-    public void UnWriteColumnValue(int index, int value)
+    private void UnWriteColumnValue(int index, int value)
     {
-        int column = BoardColumns[index];
+        ref int column = ref BoardColumns[index];
         column ^= PuzzleData.Masks[value];
-        BoardColumns[index] = column;
     }
 
-    public int ReadBoxes(int index) => BoardBoxes[index];
-
-    public void WriteBoxValue(int index, int value)
+    private void WriteBoxValue(int index, int value)
     {
-        int box = BoardBoxes[index];
+        ref int box = ref BoardBoxes[index];
         box |= PuzzleData.Masks[value];
-        BoardBoxes[index] = box;
     }
 
-    public void UnWriteBoxValue(int index, int value)
+    private void UnWriteBoxValue(int index, int value)
     {
-        int box = BoardBoxes[index];
+        ref int box = ref BoardBoxes[index];
         box ^= PuzzleData.Masks[value];
-        BoardBoxes[index] = box;
     }
 
-    public int GetRowValues(int index) => BoardRows[index];
-
-    public int GetColumnValues(int index) => BoardColumns[index];
-
-    public int GetBoxValues(int index) => BoardBoxes[index];
-
-    private static IEnumerable<int> GetValues(int values)
-    {
-        for (int i = 1; i < 10; i++)
-        {
-            var result = values & PuzzleData.Masks[i];
-            if (result > 0)
-            {
-                yield return i;
-            }
-        }
-    }
-
-    public int GetCandidates(Cell cell)
-    {
-        var rowValues = GetRowValues(cell.Row);
-        var columnValues = GetColumnValues(cell.Column);
-        var boxValues = GetBoxValues(cell.Box);
-        int inUse = rowValues | columnValues | boxValues;
-        return inUse;
-
-        // int candidates = 0b1_11111111;
-
-        // RemoveCandidates(ref candidates, rowValues);
-        // RemoveCandidates(ref candidates, columnValues);
-        // RemoveCandidates(ref candidates, boxValues);
-
-        // static void RemoveCandidates(ref int candidates, int values)
-        // {
-        //     foreach (int value in GetValues(values))
-        //     {
-        //         var result = candidates & PuzzleData.Masks[value];
-        //         if (result > 0)
-        //         {
-        //             candidates ^= PuzzleData.Masks[value];
-        //         }
-        //     }
-        // }
-
-        // return candidates;
-    }
-
-    public static Cell[] GetCells()
+    private static Cell[] GetCells()
     {
         Cell[] cells = new Cell[81];
         for (int i = 0; i < 81; i++)
@@ -142,7 +84,7 @@ public class Puzzle(ReadOnlySpan<int> board)
         return cells;
     }
 
-    public static int[] GetBoardRows(ReadOnlySpan<int> board)
+    private static int[] GetBoardRows(ReadOnlySpan<int> board)
     {
         int[] rows = new int[9];
 
@@ -165,7 +107,7 @@ public class Puzzle(ReadOnlySpan<int> board)
         return rows;
     }
 
-    public static int[] GetBoardColumns(ReadOnlySpan<int> board)
+    private static int[] GetBoardColumns(ReadOnlySpan<int> board)
     {
         int[] columns = new int[9];
         for (int i = 0; i < 9; i++)
@@ -189,7 +131,7 @@ public class Puzzle(ReadOnlySpan<int> board)
         return columns;
     }
 
-   public static int[] GetBoardBoxes(ReadOnlySpan<int> board)
+   private static int[] GetBoardBoxes(ReadOnlySpan<int> board)
     {
         int[] boxes = new int[9];
         ReadOnlySpan<int> boxIndices = PuzzleData.IndicesByBox;
@@ -213,7 +155,7 @@ public class Puzzle(ReadOnlySpan<int> board)
         return boxes;
     }
 
-    public static Cell GetCellForIndex(int index) => new(
+    private static Cell GetCellForIndex(int index) => new(
     index,                      // index
     index / 9,                  // row
     index % 9,                  // column
