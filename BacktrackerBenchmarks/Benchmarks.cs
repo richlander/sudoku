@@ -3,20 +3,18 @@ using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 
 public class BacktrackerBenchmarks
 {
-    [ParamsSource(nameof(Boards))]
-    public int[] Board { get; set; } = [];
+    [ParamsSource(nameof(Puzzles))]
+    public SudokuPuzzle Puzzle { get; set; } = PuzzleSource.Puzzles[0];
 
-    public static IEnumerable<int[]> Boards => PuzzleSource.GetPuzzles();
-
-    // [Benchmark]
-    public bool BacktrackerBaseline() => BacktrackerOne.Backtracker.Solve(Board, out int[]? solution);
-    
-    // [Benchmark]
-    public bool BacktrackerDataOriented() => BacktrackerTwo.Backtracker.Solve(Board, out int[]? solution);
-
-    // [Benchmark]
-    public bool BacktrackerCandidateBytes() => BacktrackerThree.Backtracker.Solve(Board, out int[]? solution);
+    public static IEnumerable<SudokuPuzzle> Puzzles => PuzzleSource.Puzzles;
 
     [Benchmark]
-    public bool BacktrackerQuick() => BacktrackerFour.Backtracker.Solve(Board, out int[]? solution);
+    public bool BacktrackerBaseline() => BacktrackerOne.Backtracker.Solve(Puzzle.Board, out int[]? solution);
+    
+    [Benchmark]
+    public bool BacktrackerSpanOverData() => BacktrackerTwo.Backtracker.Solve(Puzzle.Board, out int[]? solution);
+
+
+    [Benchmark]
+    public bool BacktrackerQuickBitTwiddler() => BacktrackerThree.Backtracker.Solve(Puzzle.Board, out int[]? solution);
 }
