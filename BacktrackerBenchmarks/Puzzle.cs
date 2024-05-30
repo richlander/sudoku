@@ -65,33 +65,6 @@ public class Puzzle(int[] board)
         return cellCandidates;
     }
 
-    public int GetValuesInView(Cell cell)
-    {
-        var rowValues = GetRowValues(cell.Row);
-        var columnValues = GetColumnValues(cell.Column, stackalloc int[9]);
-        var boxValues = GetBoxValues(cell.Box, stackalloc int[9]);
-        int candidates = 0;
-
-        AddValues(ref candidates, rowValues);
-        AddValues(ref candidates, columnValues);
-        AddValues(ref candidates, boxValues);
-
-        static void AddValues(ref int candidates, ReadOnlySpan<int> values)
-        {
-            foreach (int value in values)
-            {
-                if (value is 0)
-                {
-                    continue;
-                }
-
-                candidates |= PuzzleData.Masks[value];
-            }
-        }
-
-        return candidates;
-    }
-
     public static Cell[] GetCells()
     {
         Cell[] cells = new Cell[81];
