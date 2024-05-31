@@ -1,9 +1,9 @@
 using NuGet.Frameworks;
 using Sudoku;
 
-namespace BacktrackerTests;
+namespace Tests;
 
-public class UnitTest1
+public class BacktrackerTests
 {
     [Fact]
     public void BacktrackerOneTest()
