@@ -11,14 +11,14 @@ public static class Backtracker
 {
     public static bool Solve(int[] board, [NotNullWhen(true)] out int[]? solution)
     {
-        if (!ValidateBoard(board))
+        if (!IsValid(board))
         {
             solution = null;
             return false;
         }
 
         solution = [.. board];
-        return Solver(solution, 0) && ValidateBoard(solution, true);
+        return Solver(solution, 0) && IsValid(solution, true);
     }
 
     private static bool Solver(int[] board, int index)
@@ -49,7 +49,7 @@ public static class Backtracker
         return false;
     }
 
-    private static bool ValidateBoard(int[] board, bool testForEmpties = false)
+    private static bool IsValid(int[] board, bool testForEmpties = false)
     {
         if (board.Length != 81)
         {
@@ -63,7 +63,7 @@ public static class Backtracker
 
         for (int i = 0; i < 9; i++)
         {
-            if (!IsValid(board, i))
+            if (!IsValidCell(board, i))
             {
                 return false;
             }
@@ -72,7 +72,7 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValid(int[] board, int index) => 
+    private static bool IsValidCell(int[] board, int index) => 
         IsValidRow(board, index) && 
         IsValidColumn(board, index) && 
         IsValidBox(board, index);

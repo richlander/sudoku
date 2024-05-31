@@ -7,20 +7,29 @@ namespace BacktrackerThree;
 /*
     Backtracker, based on array, collection, span, and integer data types.
     Adds use of pre-computed data, spans, bit twiddling, and ref ints relative to baseline.
+    Relies on a helper class for some of the more complicated Sudoku logic.
+
+    This implementation is built on the following premises:
+
+    - We can represent the units (rows, columns, boxes) as a set of 9 cell lists.
+    - The order of the cells doesn't actually matter. We just need to know if there is a `1` present or not.
+    - Using these lists, we can determine which values are in view to produce candidate lists for a given cell.
+    - Given the use of recursion, the stack represents the puzzle with all the correct final values.
+    - An array can be created very late, to collect the data that the stack contains
 */
 
 public static class Backtracker
 {
     public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[]? solution)
     {
-        if (!ValidateBoard(board))
+        if (!IsValid(board))
         {
             solution = null;    
             return false;
         }
 
         Puzzle puzzle = new(board);
-        return Solver(puzzle, board, 0, out solution) && ValidateBoard(solution, true);
+        return Solver(puzzle, board, 0, out solution) && IsValid(solution, true);
     }
 
     private static bool Solver(Puzzle puzzle, ReadOnlySpan<int> board, int index, out int[]? solution)
@@ -30,8 +39,7 @@ public static class Backtracker
         {
             if (index is 80)
             {
-                solution = new int[81];
-                solution[80] = board[index];
+                solution = GetSolution(board[index]);
                 return true;
             }
 
@@ -68,8 +76,7 @@ public static class Backtracker
 
             if (index is 80)
             {
-                solution = new int[81];
-                solution[80] = i;
+                solution = GetSolution(i);
                 return true;
             }
             
@@ -88,7 +95,13 @@ public static class Backtracker
         return false;
     }
 
-    private static bool ValidateBoard(ReadOnlySpan<int> board, bool testForEmpties = false)
+    public int[] GetSolution(int value)
+    {
+        var solution = new int[81];
+        solution[80] = value;
+    }
+
+    private static bool IsValid(ReadOnlySpan<int> board, bool testForEmpties = false)
     {
         if (board.Length != 81)
         {
@@ -102,7 +115,7 @@ public static class Backtracker
 
         for (int i = 0; i < 9; i++)
         {
-            if (!IsValid(board, i))
+            if (!IsValidCell(board, i))
             {
                 return false;
             }
@@ -111,7 +124,7 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValid(ReadOnlySpan<int> board, int index) => 
+    private static bool IsValidCell(ReadOnlySpan<int> board, int index) => 
         IsValidRowStride(board, index * 9) && 
         IsValidRowStride(board, index, 9) && 
         IsValidBox(board, index);

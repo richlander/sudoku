@@ -1,3 +1,5 @@
+namespace Utils;
+
 public static class Utils
 {
     public static void PrintBoard(ReadOnlySpan<int> board)

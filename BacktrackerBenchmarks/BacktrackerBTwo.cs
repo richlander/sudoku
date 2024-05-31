@@ -6,12 +6,13 @@ namespace BacktrackerTwo;
 /*
     Backtracker, based on array, collection, and span data types.
     Adds use of pre-computed data, and spans relative to baseline.
+    Relies on a helper class for some of the more complicated Sudoku logic.
 */
 public static class Backtracker
 {
     public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[]? solution)
     {
-        if (!ValidateBoard(board))
+        if (!IsValidCell(board))
         {
             solution = null;
             return false;
@@ -19,7 +20,7 @@ public static class Backtracker
 
         solution = [.. board];
         Puzzle puzzle = new(solution);
-        return Solver(puzzle, 0) && ValidateBoard(solution, true);
+        return Solver(puzzle, 0) && IsValid(solution, true);
     }
 
     private static bool Solver(Puzzle puzzle, int index)
@@ -45,7 +46,7 @@ public static class Backtracker
         return false;
     }
 
-    private static bool ValidateBoard(ReadOnlySpan<int> board, bool testForEmpties = false)
+    private static bool IsValid(ReadOnlySpan<int> board, bool testForEmpties = false)
     {
         if (board.Length != 81)
         {
@@ -59,7 +60,7 @@ public static class Backtracker
 
         for (int i = 0; i < 9; i++)
         {
-            if (!IsValid(board, i))
+            if (!IsValidCell(board, i))
             {
                 return false;
             }
@@ -68,7 +69,7 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValid(ReadOnlySpan<int> board, int index) => 
+    private static bool IsValidCell(ReadOnlySpan<int> board, int index) => 
         IsValidRow(board, index) && 
         IsValidColumn(board, index) && 
         IsValidBox(board, index);
