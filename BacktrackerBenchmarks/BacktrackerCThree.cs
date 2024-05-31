@@ -11,11 +11,11 @@ namespace BacktrackerThree;
 
     This implementation is built on the following premises:
 
-    - We can represent the units (rows, columns, boxes) as a set of 9 cell lists.
-    - The order of the cells doesn't actually matter. We just need to know if there is a `1` present or not.
+    - We can represent the units (rows, columns, boxes) as a set of 9 cell lists, with legal values 0-9.
+    - The order of the cells doesn't actually matter. We just need to know if a given value is present.
     - Using these lists, we can determine which values are in view to produce candidate lists for a given cell.
     - Given the use of recursion, the stack represents the puzzle with all the correct final values.
-    - An array can be created very late, to collect the data that the stack contains
+    - A "solution" array can be created very late, to collect the final puzzle data that the stack contains.
 */
 
 public static class Backtracker
@@ -95,10 +95,11 @@ public static class Backtracker
         return false;
     }
 
-    public int[] GetSolution(int value)
+    public static int[] GetSolution(int value)
     {
         var solution = new int[81];
         solution[80] = value;
+        return solution;
     }
 
     private static bool IsValid(ReadOnlySpan<int> board, bool testForEmpties = false)
@@ -142,6 +143,9 @@ public static class Backtracker
             }
 
             int bit = 1 << value;
+            // Add bit to bitMask with XOR
+            // That will set the intended bit in bitMask
+            // If same bit is already set, make it zero, demonstrating a dupe
             bitMask ^= bit;
             if ((bitMask & bit) == 0)
             {

@@ -1,3 +1,5 @@
+namespace Sudoku;
+
 public class PuzzleSource
 {
     public static List<SudokuPuzzle> Puzzles =
@@ -27,6 +29,6 @@ public class PuzzleSource
 
 public record SudokuPuzzle(string Puzzle, string Solution, string Description)
 {
-    public int[] Board { get; } = Utils.GetNumberPuzzle(Puzzle);
+    public int[] Board { get; } = Utils.Utils.GetNumberPuzzle(Puzzle);
     public override string ToString() => Description;
 }

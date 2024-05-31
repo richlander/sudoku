@@ -12,7 +12,7 @@ public static class Backtracker
 {
     public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[]? solution)
     {
-        if (!IsValidCell(board))
+        if (!IsValid(board))
         {
             solution = null;
             return false;

@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
+using Sudoku;
 
 public class BacktrackerBenchmarks
 {
