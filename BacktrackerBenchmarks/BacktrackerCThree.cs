@@ -43,7 +43,7 @@ public static class Backtracker
                 return true;
             }
 
-            if(Solver(puzzle, board, index + 1, out solution))
+            if (Solver(puzzle, board, index + 1, out solution))
             {
                 if (solution is not null)
                 {
