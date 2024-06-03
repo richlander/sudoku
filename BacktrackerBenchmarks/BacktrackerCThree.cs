@@ -159,7 +159,7 @@ public static class Backtracker
     private static bool IsValidBox(ReadOnlySpan<int> board,  int index)
     {
         int bitMask = 0;
-        foreach (int value in Puzzle.GetBoxIndices(index))
+        foreach (int value in PuzzleData.IndicesByBox.AsSpan().Slice(index * 9, 9))
         {
             if (value is 0)
             {

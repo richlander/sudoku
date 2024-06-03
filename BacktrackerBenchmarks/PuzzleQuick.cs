@@ -7,13 +7,11 @@ public class Puzzle(ReadOnlySpan<int> board)
 {
     public Cell[] Cells { get; } = GetCells();
 
-    public int[] BoardRows { get; } = GetBoardRows(board);
+    public int[] BoardRows { get; } = GetInitialValues(board, PuzzleData.IndicesByRow);
 
-    public int[] BoardColumns { get; } = GetBoardColumns(board);
+    public int[] BoardColumns { get; } = GetInitialValues(board, PuzzleData.IndicesByColumn);
 
-    public int[] BoardBoxes { get; } = GetBoardBoxes(board);
-
-    public static ReadOnlySpan<int> GetBoxIndices(int index) => PuzzleData.IndicesByBox.AsSpan().Slice(index * 9, 9);
+    public int[] BoardBoxes { get; } = GetInitialValues(board, PuzzleData.IndicesByBox);
 
     public int GetValuesInView(Cell cell) => 
         BoardRows[cell.Row] |
@@ -52,75 +50,27 @@ public class Puzzle(ReadOnlySpan<int> board)
         return cells;
     }
 
-    private static int[] GetBoardRows(ReadOnlySpan<int> board)
+   private static int[] GetInitialValues(ReadOnlySpan<int> board, ReadOnlySpan<int> indices)
     {
-        int[] rows = new int[9];
-
+        int[] values = new int[9];
         for (int i = 0; i < 9; i++)
         {
-            int row = 0;
-            foreach (int value in board.Slice(i * 9, 9))
+            int value = 0;
+            foreach (int index in indices.Slice(i * 9, 9))
             {
-                if (value is 0)
+                int boardValue = board[index];
+                if (boardValue is 0)
                 {
                     continue;
                 }
 
-                row |= 1 << value;
+                value |= 1 << boardValue;
             }
 
-            rows[i] = row;
+            values[i] = value;
         }
 
-        return rows;
-    }
-
-    private static int[] GetBoardColumns(ReadOnlySpan<int> board)
-    {
-        int[] columns = new int[9];
-        for (int i = 0; i < 9; i++)
-        {
-            int column = 0;
-            for (int j = 0; j < 9; j++)
-            {
-                int index = j * 9 + i;
-                int value = board[index];
-                if (value is 0)
-                {
-                    continue;
-                }
-
-                column |= 1 << value;
-            }
-
-            columns[i] = column;
-        }
-
-        return columns;
-    }
-
-   private static int[] GetBoardBoxes(ReadOnlySpan<int> board)
-    {
-        int[] boxes = new int[9];
-        ReadOnlySpan<int> boxIndices = PuzzleData.IndicesByBox;
-        for (int i = 0; i < 9; i++)
-        {
-            int box = 0;
-            foreach (int index in boxIndices.Slice(i * 9, 9))
-            {
-                int value = board[index];
-                if (value is 0)
-                {
-                    continue;
-                }
-
-                box |= 1 << value;
-            }
-
-            boxes[i] = box;
-        }
-
-        return boxes;
+        return values;
     }
 
     private static Cell GetCellForIndex(int index) => new(
