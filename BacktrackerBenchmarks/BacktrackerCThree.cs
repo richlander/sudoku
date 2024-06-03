@@ -63,8 +63,8 @@ public static class Backtracker
 
         for (int i = 1; i < 10; i++)
         {
-            bool found = (viewValues & valuesMask) > 0;
             valuesMask <<= 1;
+            bool found = (viewValues & valuesMask) > 0;
 
             if (found)
             {

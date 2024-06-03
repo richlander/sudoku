@@ -24,54 +24,22 @@ public class Puzzle(ReadOnlySpan<int> board)
     {
         if (oldValue > 0)
         {
-            UnWriteRowValue(cell.Row, oldValue);
-            UnWriteColumnValue(cell.Column, oldValue);
-            UnWriteBoxValue(cell.Box, oldValue);
+            ClearValue(ref BoardRows[cell.Row], oldValue);
+            ClearValue(ref BoardColumns[cell.Column], oldValue);
+            ClearValue(ref BoardBoxes[cell.Box], oldValue);
         }
 
         if (value > 0)
         {
-            WriteRowValue(cell.Row, value);
-            WriteColumnValue(cell.Column, value);
-            WriteBoxValue(cell.Box, value);
+            WriteValue(ref BoardRows[cell.Row], value);
+            WriteValue(ref BoardColumns[cell.Column], value);
+            WriteValue(ref BoardBoxes[cell.Box], value);
         }
     }
 
-    private void WriteRowValue(int index, int value)
-    {
-        ref int row = ref BoardRows[index];
-        row |= PuzzleData.Masks[value];
-    }
+    public static void WriteValue(ref int line, int value) => line |= 1 << value;
 
-    private void UnWriteRowValue(int index, int value)
-    {
-        ref int row = ref BoardRows[index];
-        row ^= PuzzleData.Masks[value];
-    }
-
-    private void WriteColumnValue(int index, int value)
-    {
-        ref int column = ref BoardColumns[index];
-        column |= PuzzleData.Masks[value];
-    }
-
-    private void UnWriteColumnValue(int index, int value)
-    {
-        ref int column = ref BoardColumns[index];
-        column ^= PuzzleData.Masks[value];
-    }
-
-    private void WriteBoxValue(int index, int value)
-    {
-        ref int box = ref BoardBoxes[index];
-        box |= PuzzleData.Masks[value];
-    }
-
-    private void UnWriteBoxValue(int index, int value)
-    {
-        ref int box = ref BoardBoxes[index];
-        box ^= PuzzleData.Masks[value];
-    }
+    public static void ClearValue(ref int line, int value) => line ^= 1 << value;
 
     private static Cell[] GetCells()
     {
@@ -98,7 +66,7 @@ public class Puzzle(ReadOnlySpan<int> board)
                     continue;
                 }
 
-                row |= PuzzleData.Masks[value];
+                row |= 1 << value;
             }
 
             rows[i] = row;
@@ -122,7 +90,7 @@ public class Puzzle(ReadOnlySpan<int> board)
                     continue;
                 }
 
-                column |= PuzzleData.Masks[value];
+                column |= 1 << value;
             }
 
             columns[i] = column;
@@ -146,7 +114,7 @@ public class Puzzle(ReadOnlySpan<int> board)
                     continue;
                 }
 
-                box |= PuzzleData.Masks[value];
+                box |= 1 << value;
             }
 
             boxes[i] = box;
