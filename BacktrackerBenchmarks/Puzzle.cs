@@ -77,11 +77,8 @@ public class Puzzle(int[] board)
     }
 
     public static Cell GetCellForIndex(int index) => new(
-    index,                      // index
-    index / 9,                  // row
-    index % 9,                  // column
-    PuzzleData.BoxByIndices[index],        // box
-    PuzzleData.BoxRowByIndices[index],     // box row
-    PuzzleData.BoxColumnByIndices[index],  // box column
-    PuzzleData.BoxIndices[index]);         // box index
+        index,                      // index
+        index / 9,                  // row
+        index % 9,                  // column
+        PuzzleData.BoxByIndices[index]); // box
 }

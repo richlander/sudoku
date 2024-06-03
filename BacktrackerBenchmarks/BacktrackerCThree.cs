@@ -114,15 +114,15 @@ public static class Backtracker
             return false;
         }
 
-        ReadOnlySpan<int> rows = PuzzleData16.IndicesByRow;
-        ReadOnlySpan<int> columns = PuzzleData16.IndicesByColumn;
-        ReadOnlySpan<int> boxes = PuzzleData16.IndicesByBox;
+        ReadOnlySpan<int> rows = PuzzleData.IndicesByRow;
+        ReadOnlySpan<int> columns = PuzzleData.IndicesByColumn;
+        ReadOnlySpan<int> boxes = PuzzleData.IndicesByBox;
 
         for (int i = 0; i < 9; i++)
         {
-            if (IsValidLine(board, rows.Slice(i * 16, 9)) && 
-                IsValidLine(board, columns.Slice(i * 16, 9)) && 
-                IsValidLine(board, boxes.Slice(i * 16, 9)))
+            if (IsValidLine(board, rows.Slice(i * 9, 9)) && 
+                IsValidLine(board, columns.Slice(i * 9, 9)) && 
+                IsValidLine(board, boxes.Slice(i * 9, 9)))
             {
                 continue;
             }

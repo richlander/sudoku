@@ -7,11 +7,11 @@ public class Puzzle(ReadOnlySpan<int> board)
 {
     public Cell[] Cells { get; } = GetCells();
 
-    public int[] BoardRows { get; } = GetInitialValues(board, PuzzleData16.IndicesByRow);
+    public int[] BoardRows { get; } = GetInitialValues(board, PuzzleData.IndicesByRow);
 
-    public int[] BoardColumns { get; } = GetInitialValues(board, PuzzleData16.IndicesByColumn);
+    public int[] BoardColumns { get; } = GetInitialValues(board, PuzzleData.IndicesByColumn);
 
-    public int[] BoardBoxes { get; } = GetInitialValues(board, PuzzleData16.IndicesByBox);
+    public int[] BoardBoxes { get; } = GetInitialValues(board, PuzzleData.IndicesByBox);
 
     public int GetValuesInView(Cell cell) => 
         BoardRows[cell.Row] |
@@ -56,7 +56,7 @@ public class Puzzle(ReadOnlySpan<int> board)
         for (int i = 0; i < 9; i++)
         {
             int value = 0;
-            foreach (int index in indices.Slice(i * 16, 9))
+            foreach (int index in indices.Slice(i * 9, 9))
             {
                 int boardValue = board[index];
                 if (boardValue is 0)
@@ -74,11 +74,9 @@ public class Puzzle(ReadOnlySpan<int> board)
     }
 
     private static Cell GetCellForIndex(int index) => new(
-    index,                      // index
-    index / 9,                  // row
-    index % 9,                  // column
-    PuzzleData.BoxByIndices[index],        // box
-    PuzzleData.BoxRowByIndices[index],     // box row
-    PuzzleData.BoxColumnByIndices[index],  // box column
-    PuzzleData.BoxIndices[index]);         // box index
+        index,                      // index
+        index / 9,                  // row
+        index % 9,                  // column
+        PuzzleData.BoxByIndices[index]); // box
+
 }
