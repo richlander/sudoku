@@ -9,10 +9,10 @@ public class BacktrackerBenchmarks
 
     public static IEnumerable<SudokuPuzzle> Puzzles => PuzzleSource.Puzzles;
 
-    // [Benchmark]
+    [Benchmark]
     public bool BacktrackerBaseline() => BacktrackerOne.Backtracker.Solve(Puzzle.Board, out int[]? solution);
     
-    // [Benchmark]
+    [Benchmark]
     public bool BacktrackerSpanOverData() => BacktrackerTwo.Backtracker.Solve(Puzzle.Board, out int[]? solution);
 
 
