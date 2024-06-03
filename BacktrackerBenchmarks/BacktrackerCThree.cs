@@ -114,52 +114,29 @@ public static class Backtracker
             return false;
         }
 
-        for (int i = 0; i < 9; i++)
-        {
-            if (!IsValidCell(board, i))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static bool IsValidCell(ReadOnlySpan<int> board, int index) => 
-        IsValidRowStride(board, index * 9) && 
-        IsValidRowStride(board, index, 9) && 
-        IsValidBox(board, index);
-
-    private static bool IsValidRowStride(ReadOnlySpan<int> board, int index, int stride = 1)
-    {
-        int bitMask = 0;
+        ReadOnlySpan<int> rows = PuzzleData16.IndicesByRow;
+        ReadOnlySpan<int> columns = PuzzleData16.IndicesByColumn;
+        ReadOnlySpan<int> boxes = PuzzleData16.IndicesByBox;
 
         for (int i = 0; i < 9; i++)
         {
-            int value = board[index + i * stride];
-            if (value is 0)
+            if (IsValidLine(board, rows.Slice(i * 16, 9)) && 
+                IsValidLine(board, columns.Slice(i * 16, 9)) && 
+                IsValidLine(board, boxes.Slice(i * 16, 9)))
             {
                 continue;
             }
 
-            int bit = 1 << value;
-            // Add bit to bitMask with XOR
-            // That will set the intended bit in bitMask
-            // If same bit is already set, make it zero, demonstrating a dupe
-            bitMask ^= bit;
-            if ((bitMask & bit) == 0)
-            {
-                return false;
-            }
+            return false;
         }
 
         return true;
     }
 
-    private static bool IsValidBox(ReadOnlySpan<int> board,  int index)
+    private static bool IsValidLine(ReadOnlySpan<int> board, ReadOnlySpan<int> indices)
     {
         int bitMask = 0;
-        foreach (int value in PuzzleData16.IndicesByBox.AsSpan().Slice(index * 16, 9))
+        foreach (int value in indices)
         {
             if (value is 0)
             {
