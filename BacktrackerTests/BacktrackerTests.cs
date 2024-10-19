@@ -58,4 +58,22 @@ public class BacktrackerTests
 
         }
     }
+
+    [Fact]
+    public void BacktrackerFourTest()
+    {
+        foreach (var puzzle in PuzzleSource.Puzzles)
+        {
+            if (BacktrackerFour.Backtracker.Solve(puzzle.Board, out int[]? solution))
+            {
+                var expectedSolution = Utils.Utils.GetNumberPuzzle(puzzle.Solution);
+                Assert.Equal(expectedSolution, solution);
+            }
+            else
+            {
+                Assert.Fail($"Puzzle was not solved: {puzzle.Description}");
+            }
+
+        }
+    }
 }

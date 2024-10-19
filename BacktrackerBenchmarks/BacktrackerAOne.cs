@@ -63,19 +63,18 @@ public static class Backtracker
 
         for (int i = 0; i < 9; i++)
         {
-            if (!IsValidCell(board, i))
+            if (IsValidRow(board, i) && 
+                IsValidColumn(board, i) && 
+                IsValidBox(board, i))
             {
-                return false;
+                continue;
             }
+
+            return false;
         }
 
         return true;
     }
-
-    private static bool IsValidCell(int[] board, int index) => 
-        IsValidRow(board, index) && 
-        IsValidColumn(board, index) && 
-        IsValidBox(board, index);
 
     private static bool IsValidRow(int[] board, int index)
     {

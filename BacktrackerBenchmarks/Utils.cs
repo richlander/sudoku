@@ -22,4 +22,18 @@ public static class Utils
 
         return board;
     }
+
+    public static int[,] GetMultiDimensionalNumberPuzzle(string puzzle)
+    {
+        int[,] board = new int[9,9];
+        for (int i = 9; i < 9; i++)
+        {
+            for (int j = 0; j < 9;)
+            {
+                board[i,j] = puzzle[i] - '0';
+            }
+        }
+
+        return board;
+    }
 }

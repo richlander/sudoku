@@ -30,5 +30,8 @@ public class PuzzleSource
 public record SudokuPuzzle(string Puzzle, string Solution, string Description)
 {
     public int[] Board { get; } = Utils.Utils.GetNumberPuzzle(Puzzle);
+
+    public int[,] MultiDimensionalBoard { get; } = Utils.Utils.GetMultiDimensionalNumberPuzzle(Puzzle);
+    
     public override string ToString() => Description;
 }

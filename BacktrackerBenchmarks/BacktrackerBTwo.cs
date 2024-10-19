@@ -60,27 +60,26 @@ public static class Backtracker
 
         for (int i = 0; i < 9; i++)
         {
-            if (!IsValidCell(board, i))
+            if (IsValidRowStride(board, i * 9) && 
+                IsValidRowStride(board, i, 9) && 
+                IsValidBox(board, i))
             {
-                return false;
+                continue;
             }
+
+            return false;
         }
 
         return true;
     }
 
-    private static bool IsValidCell(ReadOnlySpan<int> board, int index) => 
-        IsValidRow(board, index) && 
-        IsValidColumn(board, index) && 
-        IsValidBox(board, index);
-
-    private static bool IsValidRow(ReadOnlySpan<int> board, int index)
+    private static bool IsValidRowStride(ReadOnlySpan<int> board, int index, int stride = 1)
     {
-        int offset = index * 9;
-        ReadOnlySpan<int> range = board.Slice(offset, 9);
-        for (int i = 1; i < 10; i++)
+        HashSet<int> cells = new(10);
+        for (int i = 0; i < 9; i++)
         {
-            if (range.Count(i) > 1)
+            int value = board[index + i * stride];
+            if (!(value is 0 || cells.Add(value)))
             {
                 return false;
             }
