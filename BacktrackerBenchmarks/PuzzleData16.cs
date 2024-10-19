@@ -2,7 +2,7 @@ using System.Net;
 
 namespace Sudoku;
 
-public class PuzzleData166
+public class PuzzleData16
 {
     // Board Data
     public static readonly int[] IndicesByRow = [
