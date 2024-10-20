@@ -12,7 +12,7 @@ namespace BacktrackerFour;
     This implementation is built on the following premises:
 
     - We can represent the units (rows, columns, boxes) as a set of 9 cell lists, with legal values 0-9.
-    - The order of the cells doesn't actually matter. We just need to know if a given value is present.
+    - The order of the cells doesn't matter. We just need to know if a given value is present.
     - Using these lists, we can determine which values are in view to produce candidate lists for a given cell.
     - Given the use of recursion, the stack represents the puzzle with all the correct final values.
     - A "solution" array can be created very late, to collect the final puzzle data that the stack contains.

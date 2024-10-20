@@ -123,6 +123,12 @@ public static class Backtracker
         return true;
     }
 
+    private static Cell GetCellInfo(int index) => new(
+        GetRowForCell(index),
+        GetColumnForCell(index),
+        GetBoxForCell(index)
+    );
+
     private static int GetRowForCell(int index) => index / 9;
 
     private static int GetColumnForCell(int index) => index  % 9;
@@ -143,11 +149,6 @@ public static class Backtracker
         }
     }
 
-    private static Cell GetCellInfo(int index) => new(
-        GetRowForCell(index),
-        GetColumnForCell(index),
-        GetBoxForCell(index)
-    );
 }
 
 record struct Cell(int Row, int Column, int Box);

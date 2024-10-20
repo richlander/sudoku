@@ -88,23 +88,6 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValidColumn(ReadOnlySpan<int> board, int index)
-    {
-        HashSet<int> cells = new(10);
-        int offset = index;
-        for (int i = 0; i < 9; i++)
-        {
-            int value = board[offset];
-            if (!(value is 0 || cells.Add(value)))
-            {
-                return false;
-            }
-            offset += 9;
-        }
-
-        return true;
-    }
-
     private static bool IsValidBox(ReadOnlySpan<int> board,  int index)
     {
         HashSet<int> cells = new(10);
