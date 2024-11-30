@@ -26,14 +26,58 @@ public static class Utils
     public static int[,] GetMultiDimensionalNumberPuzzle(string puzzle)
     {
         int[,] board = new int[9,9];
-        for (int i = 9; i < 9; i++)
+        int index = 0;
+        for (int i = 0; i < 9; i++)
         {
-            for (int j = 0; j < 9;)
+            for (int j = 0; j < 9; j++)
             {
-                board[i,j] = puzzle[i] - '0';
+                board[i, j] = puzzle[index++] - '0';
             }
         }
 
         return board;
+    }
+
+    public static int[][] GetJaggedNumberPuzzle(string puzzle)
+    {
+        int[][] board = new int[9][];
+        int index = 0;
+        for (int i = 0; i < 9; i++)
+        {
+            board[i] = new int[9];
+            for (int j = 0; j < 9; j++)
+            {
+                board[i][j] = puzzle[index++] - '0';
+            }
+        }
+
+        return board;
+    }
+
+    public static int[] ConvertToSingleDimensionalBoard(int[,] board)
+    {
+        int[] b = new int[81];
+        int index = 0;
+        foreach (var value in board)
+        {
+            b[index++] = value;
+        }
+
+        return b;
+    }
+
+    public static int[] ConvertToSingleDimensionalBoard(int[][] board)
+    {
+        int[] b = new int[81];
+        int index = 0;
+        for (int i = 0; i < 9; i++)
+        {
+            for (int j = 0; j < 9; j++)
+            {
+                b[index++] = board[i][j];
+            }
+        }
+
+        return b;
     }
 }

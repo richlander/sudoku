@@ -2,7 +2,7 @@ namespace Sudoku;
 
 public class PuzzleSource
 {
-    public static List<SudokuPuzzle> Puzzles =
+    public static List<SudokuPuzzle> Puzzles =>
     [
         new(
             "003020600900305001001806400008102900700000008006708200002609500800203009005010300",
@@ -32,6 +32,8 @@ public record SudokuPuzzle(string Puzzle, string Solution, string Description)
     public int[] Board { get; } = Utils.Utils.GetNumberPuzzle(Puzzle);
 
     public int[,] MultiDimensionalBoard { get; } = Utils.Utils.GetMultiDimensionalNumberPuzzle(Puzzle);
+
+    public int[][] JaggedArrayBoard { get; } = Utils.Utils.GetJaggedNumberPuzzle(Puzzle);
     
     public override string ToString() => Description;
 }

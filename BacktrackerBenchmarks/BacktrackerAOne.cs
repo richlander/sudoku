@@ -4,7 +4,8 @@ using System.Text;
 namespace BacktrackerOne;
 
 /*
-    Backtracker, based on array and collection data types.
+    Backtracker, based on array and collection data types (no Span/ref allowed).
+    It is self-sufficient, not relying on any external helpers.
     This is the baseline approach.
 */
 public static class Backtracker
@@ -25,7 +26,7 @@ public static class Backtracker
     {
         if (board[index] > 0)
         {
-            return index is 80 || Solver(board, index + 1);
+            return TryNext(board, index);
         }
 
         var (row, column, box) = GetCellInfo(index);
@@ -38,7 +39,7 @@ public static class Backtracker
                 IsValidColumn(board, column) && 
                 IsValidBox(board, box))
             {
-                if (index is 80 || Solver(board, index + 1))
+                if (TryNext(board, index))
                 {
                     return true;
                 }
@@ -47,6 +48,9 @@ public static class Backtracker
 
         board[index] = 0;
         return false;
+
+        static bool TryNext(int[] board, int index) => index is 80 || Solver(board, index + 1);
+
     }
 
     private static bool IsValid(int[] board, bool testForEmpties = false)

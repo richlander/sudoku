@@ -4,7 +4,7 @@ using Perfolizer.Mathematics.SignificanceTesting;
 using Sudoku;
 using Puzzle = PuzzleMultiDimensionalArray.Puzzle;
 
-namespace BacktrackerFive;
+namespace BacktrackerSix;
 
 /*
     Backtracker, based on array, collection, span, and integer data types.
@@ -22,7 +22,7 @@ namespace BacktrackerFive;
 
 public static class Backtracker
 {   
-    public static bool Solve(int[,] board)
+    public static bool Solve(int[][] board)
     {
         if (!IsValid(board))
         {
@@ -32,20 +32,20 @@ public static class Backtracker
         return Solver(board, new(0, 0)) || IsValid(board, true);
     }
 
-    private static bool Solver(int[,] board, Cell cell)
+    private static bool Solver(int[][] board, Cell cell)
     {
         var (x, y) = cell;
 
-        if (board[x, y] > 0)
+        if (board[x][y] > 0)
         {
             return TryNext(board, cell);
         }
 
         var (row, column, box) = GetCellInfo(cell);
 
-        while (board[x, y] < 9)
+        while (board[x][y] < 9)
         {
-            board[x, y]++;
+            board[x][y]++;
         
             if (IsValidRow(board, row) &&
                 IsValidColumn(board, column) && 
@@ -58,24 +58,20 @@ public static class Backtracker
             }
         }
 
-        board[x, y] = 0;
+        board[x][y] = 0;
         return false;
 
-        static bool TryNext(int[,] board, Cell cell) => !MoveIndexNext(cell, out Cell nextCell) || Solver(board, nextCell);
+        static bool TryNext(int[][] board, Cell cell) => !MoveIndexNext(cell, out Cell nextCell) || Solver(board, nextCell);
     }
 
-    private static bool IsValid(int[,] board, bool testForEmpties = false)
+    private static bool IsValid(int[][] board, bool testForEmpties = false)
     {
-        if (board.Length != 81)
-        {
-            return false;
-        }
-
         if (testForEmpties)
         {
-            foreach (int value in board)
+            for (int i = 0; i < board.Length; i++)
             {
-                if (value is 0)
+                for (int j = 0; j < board[i].Length; j++)
+                if (board[i][j] is 0)
                 {
                     return false;
                 }
@@ -97,12 +93,12 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValidRow(int[,] board, int index)
+    private static bool IsValidRow(int[][] board, int index)
     {
         HashSet<int> cells = new(10);
         for (int i = 0; i < 9; i++)
         {
-            int value = board[index, i];
+            int value = board[index][i];
             if (!(value is 0 || cells.Add(value)))
             {
                 return false;
@@ -111,13 +107,13 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValidColumn(int[,] board, int index)
+    private static bool IsValidColumn(int[][] board, int index)
     {
         HashSet<int> cells = new(10);
         int offset = index;
         for (int i = 0; i < 9; i++)
         {
-            int value = board[i, offset];
+            int value = board[i][offset];
             if (!(value is 0 || cells.Add(value)))
             {
                 return false;
@@ -127,12 +123,12 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValidBox(int[,] board, int index)
+    private static bool IsValidBox(int[][] board, int index)
     {
         HashSet<int> cells = new(10);
         foreach ((int, int) cell in GetBoxCells(index))
         {
-            int value = board[cell.Item1, cell.Item2];
+            int value = board[cell.Item1][cell.Item2];
             if (!(value is 0 || cells.Add(value)))
             {
                 return false;

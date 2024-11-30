@@ -28,15 +28,16 @@ public static class Backtracker
         Span<int> board = puzzle.Board;
         if (board[index] > 0)
         {
-            return index is 80 || Solver(puzzle, index + 1);
+            return TryNext(puzzle, index);
         }
 
         Cell cell = puzzle.Cells[index];
 
+        // GetCandidates reduces the search space
         foreach (int candidate in puzzle.GetCandidates(cell))
         {
             board[index] = candidate;
-            if (index is 80 || Solver(puzzle, index + 1))
+            if (TryNext(puzzle, index))
             {
                 return true;
             }
@@ -44,6 +45,8 @@ public static class Backtracker
 
         board[index] = 0;
         return false;
+
+        static bool TryNext(Puzzle puzzle, int index) => index is 80 || Solver(puzzle, index + 1);
     }
 
     private static bool IsValid(ReadOnlySpan<int> board, bool testForEmpties = false)

@@ -11,11 +11,15 @@ namespace BacktrackerFour;
 
     This implementation is built on the following premises:
 
-    - We can represent the units (rows, columns, boxes) as a set of 9 cell lists, with legal values 0-9.
-    - The order of the cells doesn't matter. We just need to know if a given value is present.
-    - Using these lists, we can determine which values are in view to produce candidate lists for a given cell.
+    - Units (rows, columns, boxes) can represented as a set of 9-cell lists, with legal values 0-9.
+    - The order of the cells doesn't matter, only whether a given value is present.
+    - Using these lists, a candidate list can be produced for a given cell using the values that are in view.
     - Given the use of recursion, the stack represents the puzzle with all the correct final values.
-    - A "solution" array can be created very late, to collect the final puzzle data that the stack contains.
+    - A "solution" array can be created very late, to collect the final puzzle data based on stack data.
+
+    This implementation differs from BacktrackerThree by using a data souce oriented around 16 count spans
+    instead of 9. This approach is bsed on the idea that algorithms based on powers of 2 are more efficient
+    that those based on powers of 3. In this case, the algorithm is based on strides of 16 vs 9.
 */
 
 public static class Backtracker
