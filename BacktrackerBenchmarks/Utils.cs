@@ -38,6 +38,13 @@ public static class Utils
         return board;
     }
 
+    public static int[,] CloneArray(int[,] originalArray)
+    {
+        int[,] copiedArray = new int[originalArray.GetLength(0), originalArray.GetLength(1)];
+        Array.Copy(originalArray, copiedArray, originalArray.Length);
+        return copiedArray;
+    }
+
     public static int[][] GetJaggedNumberPuzzle(string puzzle)
     {
         int[][] board = new int[9][];

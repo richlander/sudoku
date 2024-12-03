@@ -1,4 +1,5 @@
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using Sudoku;
 
@@ -11,7 +12,7 @@ public class BacktrackerBenchmarks
 
     public static List<SudokuPuzzle> Puzzles => PuzzleSource.Puzzles;
 
-    [Benchmark]
+    [Benchmark(Baseline = true)]
     public bool BacktrackerBaseline() => BacktrackerOne.Backtracker.Solve(Puzzle.Board, out int[]? solution);
     
     [Benchmark]
@@ -24,9 +25,13 @@ public class BacktrackerBenchmarks
     public bool BacktrackerQuickBitTwiddler16() => BacktrackerFour.Backtracker.Solve(Puzzle.Board, out int[]? solution);
 
     [Benchmark]
-    public bool BacktrackerMDArrayBaseline() => BacktrackerFive.Backtracker.Solve(Puzzle.MultiDimensionalBoard);
+    public bool BacktrackerMDArrayBaseline() => BacktrackerFive.Backtracker.Solve(Puzzle.MultiDimensionalBoard, out int[,]? solution);
 
     [Benchmark]
-    public bool BacktrackerJaggedArrayBaseline() => BacktrackerSix.Backtracker.Solve(Puzzle.JaggedArrayBoard);
+    public bool BacktrackerJaggedArrayBaseline() => BacktrackerSix.Backtracker.Solve(Puzzle.JaggedArrayBoard, out int[][]? solution);
+
+    [Benchmark]
+    public bool BacktrackerJaggedArrayOptimized() => BacktrackerSeven.Backtracker.Solve(Puzzle.JaggedArrayBoard, out int[][]? solution);
+
 
 }

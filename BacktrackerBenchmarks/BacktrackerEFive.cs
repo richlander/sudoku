@@ -22,14 +22,16 @@ namespace BacktrackerFive;
 
 public static class Backtracker
 {   
-    public static bool Solve(int[,] board)
+    public static bool Solve(int[,] board, [NotNullWhen(true)] out int[,]? solution)
     {
-        if (!IsValid(board))
+        solution = Utils.Utils.CloneArray(board);
+
+        if (!IsValid(solution))
         {
             return false;
         }
-
-        return Solver(board, new(0, 0)) || IsValid(board, true);
+        
+        return Solver(solution, new(0, 0)) || IsValid(solution, true);
     }
 
     private static bool Solver(int[,] board, Cell cell)

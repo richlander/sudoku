@@ -7,7 +7,7 @@ public class BacktrackerTests
     public static TheoryData<SudokuPuzzle> Puzzles => [..PuzzleSource.Puzzles];
 
     [Theory, MemberData(nameof(Puzzles))]
-    public void BacktrackerOneTest(SudokuPuzzle puzzle)
+    public void BacktrackerAOneTest(SudokuPuzzle puzzle)
     {
         if (BacktrackerOne.Backtracker.Solve(puzzle.Board, out int[]? solution))
         {
@@ -21,7 +21,7 @@ public class BacktrackerTests
     }
 
     [Theory, MemberData(nameof(Puzzles))]
-    public void BacktrackerTwoTest(SudokuPuzzle puzzle)
+    public void BacktrackerBTwoTest(SudokuPuzzle puzzle)
     {
         if (BacktrackerTwo.Backtracker.Solve(puzzle.Board, out int[]? solution))
         {
@@ -35,7 +35,7 @@ public class BacktrackerTests
     }
 
     [Theory, MemberData(nameof(Puzzles))]
-    public void BacktrackerThreeTest(SudokuPuzzle puzzle)
+    public void BacktrackerCThreeTest(SudokuPuzzle puzzle)
     {
         var result = BacktrackerThree.Backtracker.Solve(puzzle.Board, out int[]? solution);
         Assert.True(result, $"Puzzle was not solved: {puzzle.Description}");
@@ -44,7 +44,7 @@ public class BacktrackerTests
     }
 
     [Theory, MemberData(nameof(Puzzles))]
-    public void BacktrackerFourTest(SudokuPuzzle puzzle)
+    public void BacktrackerDFourTest(SudokuPuzzle puzzle)
     {
         var result = BacktrackerFour.Backtracker.Solve(puzzle.Board, out int[]? solution);
         Assert.True(result, $"Puzzle was not solved: {puzzle.Description}");
@@ -53,13 +53,25 @@ public class BacktrackerTests
     }
 
     [Theory, MemberData(nameof(Puzzles))]
-    public void BacktrackerFiveTest(SudokuPuzzle puzzle)
+    public void BacktrackerEFiveTest(SudokuPuzzle puzzle)
     {
-        if (BacktrackerFive.Backtracker.Solve(puzzle.MultiDimensionalBoard))
+        var result = BacktrackerFive.Backtracker.Solve(puzzle.MultiDimensionalBoard, out int[,]? solution);
+        Assert.True(result, $"Puzzle was not solved: {puzzle.Description}");
+        if (result)
         {
-            var expectedSolution = Utils.Utils.GetNumberPuzzle(puzzle.Solution);
-            var actualSolution = Utils.Utils.ConvertToSingleDimensionalBoard(puzzle.MultiDimensionalBoard);
-            Assert.Equal(expectedSolution, actualSolution);
+            var actualSolution = Utils.Utils.ConvertToSingleDimensionalBoard(solution!);
+            Assert.Equal(puzzle.NumberSolution, actualSolution);
+        }
+
+    }
+
+    [Theory, MemberData(nameof(Puzzles))]
+    public void BacktrackerFSixTest(SudokuPuzzle puzzle)
+    {
+        if (BacktrackerSix.Backtracker.Solve(puzzle.JaggedArrayBoard, out int[][]? solution))
+        {
+            var actualSolution = Utils.Utils.ConvertToSingleDimensionalBoard(solution);
+            Assert.Equal(puzzle.NumberSolution, actualSolution);
         }
         else
         {
@@ -68,17 +80,17 @@ public class BacktrackerTests
     }
 
     [Theory, MemberData(nameof(Puzzles))]
-    public void BacktrackerSixTest(SudokuPuzzle puzzle)
+    public void BacktrackerGSevenTest(SudokuPuzzle puzzle)
     {
-        if (BacktrackerSix.Backtracker.Solve(puzzle.JaggedArrayBoard))
+        if (BacktrackerSeven.Backtracker.Solve(puzzle.JaggedArrayBoard, out int[][]? solution))
         {
-            var expectedSolution = Utils.Utils.GetNumberPuzzle(puzzle.Solution);
-            var actualSolution = Utils.Utils.ConvertToSingleDimensionalBoard(puzzle.JaggedArrayBoard);
-            Assert.Equal(expectedSolution, actualSolution);
+            var actualSolution = Utils.Utils.ConvertToSingleDimensionalBoard(solution);
+            Assert.Equal(puzzle.NumberSolution, actualSolution);
         }
         else
         {
             Assert.Fail($"Puzzle was not solved: {puzzle.Description}");
         }
     }
+
 }

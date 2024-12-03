@@ -34,6 +34,8 @@ public record SudokuPuzzle(string Puzzle, string Solution, string Description)
     public int[,] MultiDimensionalBoard { get; } = Utils.Utils.GetMultiDimensionalNumberPuzzle(Puzzle);
 
     public int[][] JaggedArrayBoard { get; } = Utils.Utils.GetJaggedNumberPuzzle(Puzzle);
+
+    public int[] NumberSolution { get; } = Utils.Utils.GetNumberPuzzle(Solution);
     
     public override string ToString() => Description;
 }

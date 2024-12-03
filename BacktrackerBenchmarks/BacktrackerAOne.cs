@@ -10,7 +10,7 @@ namespace BacktrackerOne;
 */
 public static class Backtracker
 {
-    public static bool Solve(int[] board, [NotNullWhen(true)] out int[]? solution)
+    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[]? solution)
     {
         if (!IsValid(board))
         {
@@ -53,7 +53,7 @@ public static class Backtracker
 
     }
 
-    private static bool IsValid(int[] board, bool testForEmpties = false)
+    private static bool IsValid(ReadOnlySpan<int> board, bool testForEmpties = false)
     {
         if (board.Length != 81)
         {
@@ -80,7 +80,7 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValidRow(int[] board, int index)
+    private static bool IsValidRow(ReadOnlySpan<int> board, int index)
     {
         HashSet<int> cells = new(10);
         int offset = index * 9;
@@ -95,7 +95,7 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValidColumn(int[] board, int index)
+    private static bool IsValidColumn(ReadOnlySpan<int>board, int index)
     {
         HashSet<int> cells = new(10);
         int offset = index;
@@ -112,7 +112,7 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValidBox(int[] board,  int index)
+    private static bool IsValidBox(ReadOnlySpan<int> board,  int index)
     {
         HashSet<int> cells = new(10);
         foreach (int cell in GetBoxCells(index))
