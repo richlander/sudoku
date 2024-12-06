@@ -22,9 +22,9 @@ namespace BacktrackerFive;
 
 public static class Backtracker
 {   
-    public static bool Solve(int[,] board, [NotNullWhen(true)] out int[,]? solution)
+    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[,]? solution)
     {
-        solution = Utils.Utils.CloneArray(board);
+        solution = Utils.Utils.GetMultiDimensionalNumberPuzzle(board);
 
         if (!IsValid(solution))
         {

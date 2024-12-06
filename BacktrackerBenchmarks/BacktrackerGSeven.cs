@@ -22,11 +22,11 @@ namespace BacktrackerSeven;
 
 public static class Backtracker
 {   
-    public static bool Solve(int[][] board, [NotNullWhen(true)] out int[][]? solution)
+    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[][]? solution)
     {
-        solution = (int[][])board.Clone();
+        solution = Utils.Utils.GetJaggedNumberPuzzle(board);
 
-        if (!IsValid(board))
+        if (!IsValid(solution))
         {
             return false;
         }

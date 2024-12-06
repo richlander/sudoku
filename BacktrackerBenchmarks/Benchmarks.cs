@@ -10,7 +10,7 @@ public class BacktrackerBenchmarks
     [ParamsSource(nameof(Puzzles))]
     public SudokuPuzzle Puzzle { get; set; } = PuzzleSource.Puzzles[0];
 
-    public static List<SudokuPuzzle> Puzzles => PuzzleSource.Puzzles;
+    public   static List<SudokuPuzzle> Puzzles => PuzzleSource.Puzzles;
 
     [Benchmark(Baseline = true)]
     public bool BacktrackerBaseline() => BacktrackerOne.Backtracker.Solve(Puzzle.Board, out int[]? solution);
@@ -25,13 +25,11 @@ public class BacktrackerBenchmarks
     public bool BacktrackerQuickBitTwiddler16() => BacktrackerFour.Backtracker.Solve(Puzzle.Board, out int[]? solution);
 
     [Benchmark]
-    public bool BacktrackerMDArrayBaseline() => BacktrackerFive.Backtracker.Solve(Puzzle.MultiDimensionalBoard, out int[,]? solution);
+    public bool BacktrackerMDArrayBaseline() => BacktrackerFive.Backtracker.Solve(Puzzle.Board, out int[,]? solution);
 
     [Benchmark]
-    public bool BacktrackerJaggedArrayBaseline() => BacktrackerSix.Backtracker.Solve(Puzzle.JaggedArrayBoard, out int[][]? solution);
+    public bool BacktrackerJaggedArrayBaseline() => BacktrackerSix.Backtracker.Solve(Puzzle.Board, out int[][]? solution);
 
     [Benchmark]
-    public bool BacktrackerJaggedArrayOptimized() => BacktrackerSeven.Backtracker.Solve(Puzzle.JaggedArrayBoard, out int[][]? solution);
-
-
+    public bool BacktrackerJaggedArrayOptimized() => BacktrackerSeven.Backtracker.Solve(Puzzle.Board, out int[][]? solution);
 }

@@ -23,7 +23,7 @@ public static class Utils
         return board;
     }
 
-    public static int[,] GetMultiDimensionalNumberPuzzle(string puzzle)
+    public static int[,] GetMultiDimensionalNumberPuzzle(ReadOnlySpan<int> puzzle)
     {
         int[,] board = new int[9,9];
         int index = 0;
@@ -31,7 +31,7 @@ public static class Utils
         {
             for (int j = 0; j < 9; j++)
             {
-                board[i, j] = puzzle[index++] - '0';
+                board[i, j] = puzzle[index++];
             }
         }
 
@@ -45,7 +45,7 @@ public static class Utils
         return copiedArray;
     }
 
-    public static int[][] GetJaggedNumberPuzzle(string puzzle)
+    public static int[][] GetJaggedNumberPuzzle(ReadOnlySpan<int> puzzle)
     {
         int[][] board = new int[9][];
         int index = 0;
@@ -54,7 +54,7 @@ public static class Utils
             board[i] = new int[9];
             for (int j = 0; j < 9; j++)
             {
-                board[i][j] = puzzle[index++] - '0';
+                board[i][j] = puzzle[index++];
             }
         }
 

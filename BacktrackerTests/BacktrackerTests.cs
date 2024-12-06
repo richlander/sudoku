@@ -55,7 +55,7 @@ public class BacktrackerTests
     [Theory, MemberData(nameof(Puzzles))]
     public void BacktrackerEFiveTest(SudokuPuzzle puzzle)
     {
-        var result = BacktrackerFive.Backtracker.Solve(puzzle.MultiDimensionalBoard, out int[,]? solution);
+        var result = BacktrackerFive.Backtracker.Solve(puzzle.Board, out int[,]? solution);
         Assert.True(result, $"Puzzle was not solved: {puzzle.Description}");
         if (result)
         {
@@ -68,7 +68,7 @@ public class BacktrackerTests
     [Theory, MemberData(nameof(Puzzles))]
     public void BacktrackerFSixTest(SudokuPuzzle puzzle)
     {
-        if (BacktrackerSix.Backtracker.Solve(puzzle.JaggedArrayBoard, out int[][]? solution))
+        if (BacktrackerSix.Backtracker.Solve(puzzle.Board, out int[][]? solution))
         {
             var actualSolution = Utils.Utils.ConvertToSingleDimensionalBoard(solution);
             Assert.Equal(puzzle.NumberSolution, actualSolution);
@@ -82,7 +82,7 @@ public class BacktrackerTests
     [Theory, MemberData(nameof(Puzzles))]
     public void BacktrackerGSevenTest(SudokuPuzzle puzzle)
     {
-        if (BacktrackerSeven.Backtracker.Solve(puzzle.JaggedArrayBoard, out int[][]? solution))
+        if (BacktrackerSeven.Backtracker.Solve(puzzle.Board, out int[][]? solution))
         {
             var actualSolution = Utils.Utils.ConvertToSingleDimensionalBoard(solution);
             Assert.Equal(puzzle.NumberSolution, actualSolution);
