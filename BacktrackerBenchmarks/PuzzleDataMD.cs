@@ -36,5 +36,20 @@ public class PuzzleDataMD
         new(6, 0), new(6, 1), new(6, 2), new(7, 0), new(7, 1), new(7, 2), new(8, 0), new(8, 1), new(8, 2),
         new(6, 2), new(6, 3), new(6, 4), new(7, 3), new(7, 4), new(7, 5), new(8, 3), new(8, 4), new(8, 5),
         new(6, 6), new(6, 7), new(6, 8), new(7, 6), new(7, 7), new(7, 8), new(8, 6), new(8, 7), new(8, 8)
-    ];   
+    ];
+
+    public static readonly Cell[] Cells = [
+        new(0, 0, 0), new(0, 1, 0), new(0, 2, 0), new(0, 3, 1), new(0, 4, 1), new(0, 5, 1), new(0, 6, 2), new(0, 7, 2), new(0, 8, 2),
+        new(1, 0, 0), new(1, 1, 0), new(1, 2, 0), new(1, 3, 1), new(1, 4, 1), new(1, 5, 1), new(1, 6, 2), new(1, 7, 2), new(1, 8, 2),
+        new(2, 0, 0), new(2, 1, 0), new(2, 2, 0), new(2, 3, 1), new(2, 4, 1), new(2, 5, 1), new(2, 6, 2), new(2, 7, 2), new(2, 8, 2),
+        new(3, 0, 3), new(3, 1, 3), new(3, 2, 3), new(3, 3, 4), new(3, 4, 4), new(3, 5, 4), new(3, 6, 5), new(3, 7, 5), new(3, 8, 5),
+        new(4, 0, 3), new(4, 1, 3), new(4, 2, 3), new(4, 3, 4), new(4, 4, 4), new(4, 5, 4), new(4, 6, 5), new(4, 7, 5), new(4, 8, 5),
+        new(5, 0, 3), new(5, 1, 3), new(5, 2, 3), new(5, 3, 4), new(5, 4, 4), new(5, 5, 4), new(5, 6, 5), new(5, 7, 5), new(5, 8, 5),
+        new(6, 0, 6), new(6, 1, 6), new(6, 2, 6), new(6, 3, 7), new(6, 4, 7), new(6, 5, 7), new(6, 6, 8), new(6, 7, 8), new(6, 8, 8),
+        new(6, 0, 6), new(6, 1, 6), new(6, 2, 6), new(6, 3, 7), new(6, 4, 7), new(6, 5, 7), new(6, 6, 8), new(6, 7, 8), new(6, 8, 8),
+        new(7, 0, 6), new(7, 1, 6), new(7, 2, 6), new(7, 3, 7), new(7, 4, 7), new(7, 5, 7), new(7, 6, 8), new(7, 7, 8), new(7, 8, 8),
+        new(8, 0, 6), new(8, 1, 6), new(8, 2, 6), new(8, 3, 7), new(8, 4, 7), new(8, 5, 7), new(8, 6, 8), new(8, 7, 8), new(8, 8, 8),
+    ];
 }
+
+record Cell(int Row, int Column, int Box);

@@ -1,8 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Diagnostics.Tracing.Analysis.GC;
+using Perfolizer.Mathematics.SignificanceTesting;
+using PuzzleMultiDimensionalArray;
 using Sudoku;
-using Puzzle = PuzzleQuick16.Puzzle;
+using Puzzle = PuzzleMultiDimensionalArray.Puzzle;
+using Cell = PuzzleMultiDimensionalArray.Cell;
 
-namespace BacktrackerFour;
+namespace BacktrackerFiveOptimized;
 
 /*
     Backtracker, based on array, collection, span, and integer data types.
@@ -11,47 +15,46 @@ namespace BacktrackerFour;
 
     This implementation is built on the following premises:
 
-    - Units (rows, columns, boxes) can represented as a set of 9-cell lists, with legal values 0-9.
-    - The order of the cells doesn't matter, only whether a given value is present.
-    - Using these lists, a candidate list can be produced for a given cell using the values that are in view.
+    - We can represent the units (rows, columns, boxes) as a set of 9 cell lists, with legal values 0-9.
+    - The order of the cells doesn't matter. We just need to know if a given value is present.
+    - Using these lists, we can determine which values are in view to produce candidate lists for a given cell.
     - Given the use of recursion, the stack represents the puzzle with all the correct final values.
-    - A "solution" array can be created very late, to collect the final puzzle data based on stack data.
-
-    This implementation differs from BacktrackerThree by using a data souce oriented around 16 count spans
-    instead of 9. This approach is bsed on the idea that algorithms based on powers of 2 are more efficient
-    that those based on powers of 3. In this case, the algorithm is based on strides of 16 vs 9.
+    - A "solution" array can be created very late, to collect the final puzzle data that the stack contains.
 */
 
 public static class Backtracker
-{
-    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[]? solution)
+{   
+    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[,]? solution)
     {
-        if (!IsValid(board))
+        if (!IsValid(solution))
         {
-            solution = null;    
+            solution = null;
             return false;
         }
-
-        Puzzle puzzle = new(board);
-        return Solver(puzzle, board, 0, out solution) && IsValid(solution, true);
+        
+        solution = Utils.Utils.GetMultiDimensionalNumberPuzzle(board);
+        Puzzle puzzle = new(solution);
+        return Solver(puzzle, solution, new(0, 0, 0), out solution) || IsValid(solution, true);
     }
 
-    private static bool Solver(Puzzle puzzle, ReadOnlySpan<int> board, int index, out int[]? solution)
+    private static bool Solver(Puzzle puzzle, int[,] board, Cell cell, out int[,]? solution)
     {
         solution = null;
-        if (board[index] > 0)
+        var (x, y, _) = cell;
+
+        if (board[x, y] > 0)
         {
-            if (index is 80)
+            if (IsLastCell(cell))
             {
-                solution = GetSolution(board[index]);
+                solution = GetSolution(board[x, y]);
                 return true;
             }
 
-            if (Solver(puzzle, board, index + 1, out solution))
+            if (TryNext(puzzle, board, cell, out solution))
             {
                 if (solution is not null)
                 {
-                    solution[index] = board[index];
+                    solution[x, y] = board[x, y];
                 }
 
                 return true;
@@ -60,15 +63,14 @@ public static class Backtracker
             return false;
         }
 
-        Cell cell = puzzle.Cells[index];
-        int viewValues = puzzle.GetValuesInView(cell);
+        int inViewValues = puzzle.GetValuesInView(cell);
         int previousValue = 0;
         int valuesMask = 1;
 
         for (int i = 1; i < 10; i++)
         {
             valuesMask <<= 1;
-            bool found = (viewValues & valuesMask) > 0;
+            bool found = (inViewValues & valuesMask) > 0;
 
             if (found)
             {
@@ -78,17 +80,17 @@ public static class Backtracker
             puzzle.UpdateCell(cell, previousValue, i);
             previousValue = i;
 
-            if (index is 80)
+            if (IsLastCell(cell))
             {
                 solution = GetSolution(i);
                 return true;
             }
             
-            if (Solver(puzzle, board, index + 1, out solution))
+            if (TryNext(puzzle, board, cell, out solution))
             {
                 if (solution is not null)
                 {
-                    solution[cell] = i;
+                    solution[x, y] = board[x, y];
                 }
 
                 return true;
@@ -97,12 +99,24 @@ public static class Backtracker
 
         puzzle.UpdateCell(cell, previousValue, 0);
         return false;
+
+        static bool TryNext(Puzzle puzzle, int[,] board, Cell cell, out int[,]? solution)
+        {
+            solution = null;
+
+            if (!MoveIndexNext(cell, out Cell nextCell))
+            {
+                return false;
+            }
+            
+            return Solver(puzzle, board, nextCell, out solution);
+        }
     }
 
-    public static int[] GetSolution(int value)
+    public static int[,] GetSolution(int value)
     {
-        var solution = new int[81];
-        solution[80] = value;
+        var solution = new int[9, 9];
+        solution[8, 8] = value;
         return solution;
     }
 
@@ -156,5 +170,28 @@ public static class Backtracker
         }
 
         return true;
+    }
+
+    private static bool IsLastCell(Cell cell) => cell.Row is 8 && cell.Column is 8;
+
+    private static bool MoveIndexNext(Cell cell, out Cell nextCell)
+    {
+        var (x, y, _) = cell;
+
+        if (y < 8)
+        {
+            int index = x * 9 + y +1;
+            nextCell = PuzzleDataMD.Cells[index];
+            return true;
+        }
+        else if (x < 8)
+        {
+            int index = (x + 1) * 9 + y;
+            nextCell = PuzzleDataMD.Cells[index];
+            return true;
+        }
+
+        nextCell = cell;
+        return false;
     }
 }

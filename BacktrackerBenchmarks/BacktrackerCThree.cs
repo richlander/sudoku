@@ -66,6 +66,7 @@ public static class Backtracker
             valuesMask <<= 1;
             bool found = (viewValues & valuesMask) > 0;
 
+            // This is equivalent to IsValid
             if (found)
             {
                 continue;

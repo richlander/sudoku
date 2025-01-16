@@ -1,17 +1,19 @@
 using Sudoku;
-using Microsoft.Diagnostics.Tracing.StackSources;
 
 namespace PuzzleMultiDimensionalArray;
 
-public class Puzzle(int[,] board)
+public class Puzzle
 {
-    public Cell[] Cells { get; } = GetCells();
+    public Puzzle(int[,] board)
+    {
+        (BoardRows, BoardColumns, BoardBoxes) = GetInitialValues(board);
+    }
 
-    public int[] BoardRows { get; } = GetInitialValues(board, PuzzleDataMD.PuzzleRow);
+    public int[] BoardRows { get; }
 
-    public int[] BoardColumns { get; } = GetInitialValues(board, PuzzleDataMD.PuzzleColumn);
+    public int[] BoardColumns { get; }
 
-    public int[] BoardBoxes { get; } = GetInitialValues(board, PuzzleDataMD.PuzzleBox);
+    public int[] BoardBoxes { get; }
 
     public int GetValuesInView(Cell cell) => 
         BoardRows[cell.Row] |
@@ -39,117 +41,30 @@ public class Puzzle(int[,] board)
 
     public static void ClearValue(ref int line, int value) => line ^= 1 << value;
 
-    private static int[] GetInitialRowValues(int[,] board)
+    private static (int[] rowValue, int[] columnValue, int[] boxValue) GetInitialValues(int[,] board)
     {
-        int[] values = new int[9];
-
-        for (int i = 0; i < 9; i++)
-        {
-            int value = 0;
-
-            for (int j = 0; j < 9; j++)
-            {
-                int boardValue = board[i, j];
-                if (boardValue is 0)
-                {
-                    continue;
-                }
-
-                value |= 1 << boardValue;
-            }
-
-            values[i] = value;
-        }
-
-        return values;
-    }
-
-    private static int[] GetInitialColumnValues(int[,] board)
-    {
-        int[] values = new int[9];
-
-        for (int i = 0; i < 9; i++)
-        {
-            int value = 0;
-
-            for (int j = 0; j < 9; j++)
-            {
-                int boardValue = board[j, i];
-                if (boardValue is 0)
-                {
-                    continue;
-                }
-
-                value |= 1 << boardValue;
-            }
-
-            values[i] = value;
-        }
-
-        return values;
-    }
-
-    private static int[] GetInitialBoxValues(int[,] board)
-    {
-        int[] values = new int[9];
-
-        for (int i = 0; i < 9; i++)
-        {
-            int value = 0;
-            int firstBoxRow = i / 3;
-            int firstBoxColumn = i % 3 * 3;
-
-            for (int j = 0; j < 3; j++)
-            {
-                int row = firstBoxRow;
-                value |= 1 << board[row++, firstBoxColumn + j];
-                value |= 1 << board[row++, firstBoxColumn + j];
-                value |= 1 << board[row++, firstBoxColumn + j];
-            }
-
-            values[i] = value;
-        }
-
-        return values;
-    }
-
-    private static int[] GetInitialValues(int[,] board, ReadOnlySpan<Point> indices)
-    {
-        int[] values = new int[9];
-        for (int i = 0; i < 9; i++)
-        {
-            int value = 0;
-            foreach (Point point in indices.Slice(i * 16, 9))
-            {
-                int boardValue = board[point.X, point.Y];
-                if (boardValue is 0)
-                {
-                    continue;
-                }
-
-                value |= 1 << boardValue;
-            }
-
-            values[i] = value;
-        }
-
-        return values;
-    }
-
-    private static Cell[] GetCells()
-    {
-        Cell[] cells = new Cell[81];
+        Cell[] cells = [];
+        int[] rowValues = new int[9];
+        int[] columnValues = new int[9];
+        int[] boxValues = new int[9];
         for (int i = 0; i < 81; i++)
         {
-            cells[i] = GetCellForIndex(i);
+            var (row, column, box) = PuzzleDataMD.Cells[i];
+            int value = board[row, column];
+
+            if (value is 0)
+            {
+                continue;
+            }
+
+            int shiftedValue = 1 << value;
+            rowValues[row] |= shiftedValue;
+            columnValues[column] |= shiftedValue;
+            boxValues[box] |= shiftedValue;
         }
 
-        return cells;
+        return (rowValues, columnValues, boxValues);
     }
-
-    private static Cell GetCellForIndex(int index) => new(
-        PuzzleDataMD.PuzzleRow[index],    // index
-        PuzzleData16.PuzzleRow[index],    // row
-        PuzzleData16.PuzzleColumn[index], // column
-        PuzzleData.BoxByIndices[index]);  // box
 }
+
+public record Cell2(int Row, int Column, int Box);
