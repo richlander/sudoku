@@ -1,10 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Diagnostics.Tracing.Analysis.GC;
-using Perfolizer.Mathematics.SignificanceTesting;
 using Sudoku;
-using Puzzle = PuzzleMultiDimensionalArray.Puzzle;
 
-namespace BacktrackerSeven;
+namespace BacktrackerSix;
 
 /*
     Backtracker, based on array, collection, span, and integer data types.
@@ -21,43 +18,35 @@ namespace BacktrackerSeven;
 */
 
 public static class Backtracker
-{   
-    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[][]? solution)
+{
+    public static bool Solve(int[][] board, [NotNullWhen(true)] out int[][]? solution)
     {
-        solution = Utils.Utils.GetJaggedNumberPuzzle(board);
+        solution = board;
 
         if (!IsValid(solution))
         {
             return false;
         }
 
-        return Solver(solution, new(0, 0)) || IsValid(solution, true);
+        return Solver(solution, new(0, 0, 0)) || IsValid(solution, true);
     }
 
     private static bool Solver(int[][] board, Cell cell)
     {
-        var (x, y) = cell;
+        var (x, y, z) = cell;
 
         if (board[x][y] > 0)
         {
             return TryNext(board, cell);
         }
 
-        if (!CellInfoCells.TryGetValue(cell, out var cellInfo))
-        {
-            cellInfo = GetCellInfo(cell);
-            CellInfoCells.Add(cell, cellInfo);
-        }
-
-        var (row, column, box) = cellInfo;
-
         while (board[x][y] < 9)
         {
             board[x][y]++;
-        
-            if (IsValidRow(board, row) &&
-                IsValidColumn(board, column) && 
-                IsValidBox(board, box))
+
+            if (IsValidRow(board, x) &&
+                IsValidColumn(board, y) &&
+                IsValidBox(board, z))
             {
                 if (TryNext(board, cell))
                 {
@@ -69,7 +58,7 @@ public static class Backtracker
         board[x][y] = 0;
         return false;
 
-        static bool TryNext(int[][] board, Cell cell) => !MoveIndexNext(cell, out Cell nextCell) || Solver(board, nextCell);
+        static bool TryNext(int[][] board, Cell cell) => !cell.MoveNext(out Cell nextCell) || Solver(board, nextCell);
     }
 
     private static bool IsValid(int[][] board, bool testForEmpties = false)
@@ -79,17 +68,17 @@ public static class Backtracker
             for (int i = 0; i < board.Length; i++)
             {
                 for (int j = 0; j < board[i].Length; j++)
-                if (board[i][j] is 0)
-                {
-                    return false;
-                }
+                    if (board[i][j] is 0)
+                    {
+                        return false;
+                    }
             }
         }
 
         for (int i = 0; i < 9; i++)
         {
-            if (IsValidRow(board, i) && 
-                IsValidColumn(board, i) && 
+            if (IsValidRow(board, i) &&
+                IsValidColumn(board, i) &&
                 IsValidBox(board, i))
             {
                 continue;
@@ -134,9 +123,9 @@ public static class Backtracker
     private static bool IsValidBox(int[][] board, int index)
     {
         HashSet<int> cells = new(10);
-        foreach (var (x, y) in BoxCells[index])
+        foreach ((int, int) cell in GetBoxCells(index))
         {
-            int value = board[x][y];
+            int value = board[cell.Item1][cell.Item2];
             if (!(value is 0 || cells.Add(value)))
             {
                 return false;
@@ -146,61 +135,16 @@ public static class Backtracker
         return true;
     }
 
-    private static CellInfo GetCellInfo(Cell index) => new(
-        index.X,
-        index.Y,
-        GetBoxForCell(index)
-    );
-
-    private static int GetBoxForCell(Cell index) => index.X / 3 * 3 + index.Y / 3;
-
-    private static IEnumerable<Cell> GetBoxCells(int index)
+    private static IEnumerable<(int, int)> GetBoxCells(int index)
     {
         int x = index / 3 * 3;
         int y = index % 3 * 3;
         for (int i = 0; i < 3; i++)
         {
-            yield return new(x, y);
-            yield return new(x, y + 1);
-            yield return new(x, y + 2);
+            yield return (x, y);
+            yield return (x, y + 1);
+            yield return (x, y + 2);
             x++;
         }
     }
-
-    private static Dictionary<int, List<Cell>> GetBoxCellsForBoard()
-    {
-        Dictionary<int, List<Cell>> cells = [];
-        
-        for (int i = 0; i < 9; i++)
-        {
-            cells.Add(i, [.. GetBoxCells(i)]);
-        }
-
-        return cells;
-    }
-
-    private static bool MoveIndexNext(Cell cell, out Cell nextCell)
-    {
-        var (x, y) = cell;
-        if (y < 8)
-        {
-            nextCell = new(x, y + 1);
-            return true;
-        }
-        else if (x < 8)
-        {
-            nextCell = new(x + 1, 0);
-            return true;
-        }
-
-        nextCell = cell;
-        return false;
-    }
-
-    private static Dictionary<int, List<Cell>> BoxCells { get; } = GetBoxCellsForBoard();
-    private static Dictionary<Cell, CellInfo> CellInfoCells { get; } = [];
 }
-
-record struct CellInfo(int Row, int Column, int Box);
-
-record struct Cell(int X, int Y);

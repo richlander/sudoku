@@ -37,8 +37,8 @@ public class PuzzleData
         54, 55, 56, 63, 64, 65, 72, 73, 74,
         57, 58, 59, 66, 67, 68, 75, 76, 77,
         60, 61, 62, 69, 70, 71, 78, 79, 80];
-        
-    public static readonly int[] BoxByIndices = [ 
+
+    public static readonly int[] BoxByIndices = [
         0, 0, 0, 1, 1, 1, 2, 2, 2,
         0, 0, 0, 1, 1, 1, 2, 2, 2,
         0, 0, 0, 1, 1, 1, 2, 2, 2,

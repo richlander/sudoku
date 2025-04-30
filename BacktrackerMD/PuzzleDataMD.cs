@@ -1,3 +1,5 @@
+using Sudoku;
+
 namespace PuzzleMultiDimensionalArray;
 
 public class PuzzleDataMD
@@ -51,5 +53,3 @@ public class PuzzleDataMD
         new(8, 0, 6), new(8, 1, 6), new(8, 2, 6), new(8, 3, 7), new(8, 4, 7), new(8, 5, 7), new(8, 6, 8), new(8, 7, 8), new(8, 8, 8),
     ];
 }
-
-record Cell(int Row, int Column, int Box);

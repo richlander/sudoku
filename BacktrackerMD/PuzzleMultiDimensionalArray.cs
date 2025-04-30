@@ -15,7 +15,7 @@ public class Puzzle
 
     public int[] BoardBoxes { get; }
 
-    public int GetValuesInView(Cell cell) => 
+    public int GetValuesInView(Cell cell) =>
         BoardRows[cell.Row] |
         BoardColumns[cell.Column] |
         BoardBoxes[cell.Box];
@@ -66,5 +66,3 @@ public class Puzzle
         return (rowValues, columnValues, boxValues);
     }
 }
-
-public record Cell2(int Row, int Column, int Box);

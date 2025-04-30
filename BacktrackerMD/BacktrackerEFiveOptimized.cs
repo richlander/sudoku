@@ -1,10 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Diagnostics.Tracing.Analysis.GC;
-using Perfolizer.Mathematics.SignificanceTesting;
 using PuzzleMultiDimensionalArray;
 using Sudoku;
-using Puzzle = PuzzleMultiDimensionalArray.Puzzle;
-using Cell = PuzzleMultiDimensionalArray.Cell;
 
 namespace BacktrackerFiveOptimized;
 
@@ -23,18 +19,18 @@ namespace BacktrackerFiveOptimized;
 */
 
 public static class Backtracker
-{   
-    public static bool Solve(ReadOnlySpan<int> board, [NotNullWhen(true)] out int[,]? solution)
+{
+    public static bool Solve(int[,] board, [NotNullWhen(true)] out int[,]? solution)
     {
+        solution = board;
         if (!IsValid(solution))
         {
             solution = null;
             return false;
         }
-        
-        solution = Utils.Utils.GetMultiDimensionalNumberPuzzle(board);
+
         Puzzle puzzle = new(solution);
-        return Solver(puzzle, solution, new(0, 0, 0), out solution) || IsValid(solution, true);
+        return Solver(puzzle, solution, new(0, 0, 0), out solution) && IsValid(solution!, true);
     }
 
     private static bool Solver(Puzzle puzzle, int[,] board, Cell cell, out int[,]? solution)
@@ -85,7 +81,7 @@ public static class Backtracker
                 solution = GetSolution(i);
                 return true;
             }
-            
+
             if (TryNext(puzzle, board, cell, out solution))
             {
                 if (solution is not null)
@@ -108,9 +104,38 @@ public static class Backtracker
             {
                 return false;
             }
-            
+
             return Solver(puzzle, board, nextCell, out solution);
         }
+    }
+
+    public static bool MoveIndexNext(Cell cell, out Cell nextCell)
+    {
+        var (x, y, z) = cell;
+
+        if (y < 8)
+        {
+            y++;
+
+            if (y % 3 is 0)
+            {
+                z++;
+            }
+        }
+        else if (x < 8)
+        {
+            x++;
+            y = 0;
+            z = x / 3 * 3;
+        }
+        else
+        {
+            nextCell = cell;
+            return false;
+        }
+
+        nextCell = new(x, y, z);
+        return true;
     }
 
     public static int[,] GetSolution(int value)
@@ -120,27 +145,13 @@ public static class Backtracker
         return solution;
     }
 
-    private static bool IsValid(ReadOnlySpan<int> board, bool testForEmpties = false)
+    private static bool IsValid(int[,] board, bool testForEmpties = false)
     {
-        if (board.Length != 81)
-        {
-            return false;
-        }
-
-        if (testForEmpties && board.Contains(0))
-        {
-            return false;
-        }
-
-        ReadOnlySpan<int> rows = PuzzleData16.IndicesByRow;
-        ReadOnlySpan<int> columns = PuzzleData16.IndicesByColumn;
-        ReadOnlySpan<int> boxes = PuzzleData16.IndicesByBox;
-
         for (int i = 0; i < 9; i++)
         {
-            if (IsValidLine(board, rows.Slice(i * 16, 9)) && 
-                IsValidLine(board, columns.Slice(i * 16, 9)) && 
-                IsValidLine(board, boxes.Slice(i * 16, 9)))
+            if (IsValidRow(board, i) &&
+                IsValidColumn(board, i) &&
+                IsValidBox(board, i))
             {
                 continue;
             }
@@ -151,19 +162,28 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsValidLine(ReadOnlySpan<int> board, ReadOnlySpan<int> indices)
+    private static bool IsValidRow(int[,] board, int index)
     {
-        int bitMask = 0;
-        foreach (int value in indices)
+        HashSet<int> cells = new(10);
+        for (int i = 0; i < 9; i++)
         {
-            if (value is 0)
+            int value = board[index, i];
+            if (!(value is 0 || cells.Add(value)))
             {
-                continue;
+                return false;
             }
+        }
+        return true;
+    }
 
-            int bit = 1 << value;
-            bitMask ^= bit;
-            if ((bitMask & bit) == 0)
+    private static bool IsValidColumn(int[,] board, int index)
+    {
+        HashSet<int> cells = new(10);
+        int offset = index;
+        for (int i = 0; i < 9; i++)
+        {
+            int value = board[i, offset];
+            if (!(value is 0 || cells.Add(value)))
             {
                 return false;
             }
@@ -172,26 +192,49 @@ public static class Backtracker
         return true;
     }
 
-    private static bool IsLastCell(Cell cell) => cell.Row is 8 && cell.Column is 8;
-
-    private static bool MoveIndexNext(Cell cell, out Cell nextCell)
+    private static bool IsValidBox(int[,] board, int index)
     {
-        var (x, y, _) = cell;
-
-        if (y < 8)
+        HashSet<int> cells = new(10);
+        foreach (Cell cell in BoxCells[index])
         {
-            int index = x * 9 + y +1;
-            nextCell = PuzzleDataMD.Cells[index];
-            return true;
-        }
-        else if (x < 8)
-        {
-            int index = (x + 1) * 9 + y;
-            nextCell = PuzzleDataMD.Cells[index];
-            return true;
+            var (x, y, _) = cell;
+            int value = board[x, y];
+            if (!(value is 0 || cells.Add(value)))
+            {
+                return false;
+            }
         }
 
-        nextCell = cell;
-        return false;
+        return true;
     }
+
+    private static IEnumerable<Cell> GetBoxCells(int index)
+    {
+        int x = index / 3 * 3;
+        int y = index % 3 * 3;
+        for (int i = 0; i < 3; i++)
+        {
+            yield return new(x, y, index);
+            yield return new(x, y + 1, index);
+            yield return new(x, y + 2, index);
+            x++;
+        }
+    }
+
+    private static Dictionary<int, List<Cell>> BoxCells { get; } = GetBoxCellsForBoard();
+
+    private static Dictionary<int, List<Cell>> GetBoxCellsForBoard()
+    {
+        Dictionary<int, List<Cell>> cells = [];
+
+        for (int i = 0; i < 9; i++)
+        {
+            cells.Add(i, [.. GetBoxCells(i)]);
+        }
+
+        return cells;
+    }
+
+
+    private static bool IsLastCell(Cell cell) => cell.Row is 8 && cell.Column is 8;
 }
